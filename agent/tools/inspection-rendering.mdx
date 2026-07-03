@@ -1,0 +1,568 @@
+---
+title: "Inspection and rendering tools"
+description: "World-state retrieval, object inspection, snapshots, selection, viewport navigation, screenshots, overlays, TechDraw rendering, and visual baselines."
+---
+
+World-state retrieval, object inspection, snapshots, selection, viewport navigation, screenshots, overlays, TechDraw rendering, and visual baselines.
+
+Tool count: `17`.
+
+Client note: `ctx` is injected by the MCP server and is not supplied as a user argument.
+
+## `capture_view_baseline`
+
+Source: `Parashell-Modules/Source/Bridge/tools/capture_view_baseline.py`
+
+Signature:
+
+```python
+capture_view_baseline(label: str, view_name: Literal['Isometric', 'Front', 'Top', 'Right', 'Back', 'Left', 'Bottom', 'Dimetric', 'Trimetric'] = 'Isometric', width: int | None = None, height: int | None = None, focus_object: str | None = None, display_mode: Literal['Shaded', 'Wireframe', 'Flat Lines', 'Hidden line', 'Points', 'As is'] | None = None, hide: list[str] | None = None, show_only: list[str] | None = None) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Capture a screenshot and store it under 'label' as a baseline for compare_views.
+
+Useful as the "before" snapshot before applying a change so a later
+compare_views(label, view_name=...) can show exactly what moved.
+
+Args:
+    label: Identifier for the stored baseline (e.g. "before_chimney").
+    view_name: Standard view preset.
+    width / height: Screenshot pixel dimensions.
+    focus_object: Object to focus on. Fits all if omitted.
+    display_mode / hide / show_only: Same semantics as get_view.
+```
+
+## `clear_view_baselines`
+
+Source: `Parashell-Modules/Source/Bridge/tools/clear_view_baselines.py`
+
+Signature:
+
+```python
+clear_view_baselines(label: str | None = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Remove stored baselines.
+
+Pass a 'label' to remove a single baseline, or omit to clear all of them.
+
+Args:
+    label: Specific baseline label to remove. None / omitted clears all.
+```
+
+## `compare_views`
+
+Source: `Parashell-Modules/Source/Bridge/tools/compare_views.py`
+
+Signature:
+
+```python
+compare_views(baseline_label: str, view_name: Literal['Isometric', 'Front', 'Top', 'Right', 'Back', 'Left', 'Bottom', 'Dimetric', 'Trimetric'] = 'Isometric', width: int | None = None, height: int | None = None, focus_object: str | None = None, display_mode: Literal['Shaded', 'Wireframe', 'Flat Lines', 'Hidden line', 'Points', 'As is'] | None = None, hide: list[str] | None = None, show_only: list[str] | None = None, title: str | None = None) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Capture a current screenshot and diff it against a stored baseline.
+
+Returns a single composited image with three panels (baseline, current,
+pixel-level diff highlighted in red), plus a summary of how many pixels
+changed and the percentage of the frame that differs. Use this to
+programmatically confirm a stage moved exactly the geometry you expected
+instead of eyeballing two separate screenshots.
+
+Args:
+    baseline_label: Label previously passed to capture_view_baseline.
+    view_name: Standard view preset for the current capture.
+    width / height: Screenshot pixel dimensions.
+    focus_object: Object to focus on. Fits all if omitted.
+    display_mode / hide / show_only: Same semantics as get_view.
+    title: Optional title bar text drawn at the top of the diff image.
+```
+
+## `get_feature_tree`
+
+Source: `Parashell-Modules/Source/Bridge/tools/get_feature_tree.py`
+
+Signature:
+
+```python
+get_feature_tree(doc_name: str, body_name: str | None = None, include_orphans: bool = True) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Return PartDesign body feature dependency graphs for a document.
+
+For each PartDesign::Body in the document (or only the named one), returns:
+  - name, label, type_id, tip (the body's current tip feature)
+  - feature_chain: ordered list of PartDesign features (Pad, Pocket, Boolean,
+    Fillet, Chamfer, Mirrored, ...). Each entry has:
+      name, label, type_id, category, state, must_execute, is_tip,
+      base_features (the BaseFeature predecessor names - the linear chain),
+      links (every link property and target plus subelement when present, e.g.
+        Profile -> Sketch001, ReferenceAxis -> Origin#X_Axis, UpToFace -> Pad.Face3),
+      shape_summary (type, is_null, is_valid, volume).
+  - sketches_and_datums: every sketch / datum / shape binder that lives inside
+    the body's Group. Sketches include 'consumed_by' listing every PartDesign
+    feature whose Profile/Sketch references them, so you can see which Pocket
+    owns which sketch without piecing it together yourself.
+  - feature_count, sketch_count, datum_count
+
+Outside the bodies, when include_orphans is True the response also lists any
+PartDesign / Part / Sketcher objects that are not inside a body, with the same
+node format. This catches Part::Box/Cut/Fuse trees and dangling sketches.
+
+Args:
+    doc_name: Document to inspect.
+    body_name: Optional PartDesign::Body name. If omitted, every body in the
+               document is returned.
+    include_orphans: When True, also report PartDesign/Part/Sketcher objects
+                     that are not inside a body. Default True.
+```
+
+## `get_object`
+
+Source: `Parashell-Modules/Source/Bridge/tools/get_object.py`
+
+Signature:
+
+```python
+get_object(doc_name: str, obj_name: str) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Get a specific object and its properties from a Parashell document.
+
+Args:
+    doc_name: The name of the document.
+    obj_name: The name of the object.
+```
+
+## `get_objects`
+
+Source: `Parashell-Modules/Source/Bridge/tools/get_objects.py`
+
+Signature:
+
+```python
+get_objects(doc_name: str) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Get all objects in a Parashell document.
+
+Args:
+    doc_name: The name of the document.
+```
+
+## `get_ortho`
+
+Source: `Parashell-Modules/Source/Bridge/tools/get_ortho.py`
+
+Signature:
+
+```python
+get_ortho(views: list[str] | None = None, tile_width: int = 480, tile_height: int = 360, focus_object: str | None = None, include_isometric: bool = True, display_mode: Literal['Shaded', 'Wireframe', 'Flat Lines', 'Hidden line', 'Points', 'As is'] | None = None, hide: list[str] | None = None, show_only: list[str] | None = None, highlight: list[str] | None = None, highlight_color: list[float] | None = None, camera_mode: Literal['Perspective', 'Orthographic'] | None = None) -> list[ImageContent | TextContent]
+```
+
+Descriptor:
+
+```text
+Get all orthographic views composited into a single labeled grid image.
+
+Captures the requested standard views and stitches them into a grid with
+dark-themed labeled tiles. Ortho views are arranged in a 3-column grid
+(Front/Right/Top, Back/Left/Bottom) with the Isometric view spanning the
+full width below. Ideal for a spatial overview of a model in a single call.
+
+Visual overrides (display_mode, hide, show_only, highlight) follow the same
+rules as get_view - applied per tile, restored after each capture, and
+accept either object names or take_snapshot uids.
+
+Each tile is fully settled before it is captured, so no tile shows a
+mid-transition camera. Camera animation is disabled during the capture and
+re-enabled afterward.
+
+Args:
+    views: List of view names to include. Defaults to all six orthographic views
+           plus Isometric: ["Front", "Right", "Top", "Back", "Left", "Bottom", "Isometric"].
+           Any subset of these can be requested.
+    tile_width: Width in pixels of each individual view tile. Default 480.
+    tile_height: Height in pixels of each individual view tile. Default 360.
+    focus_object: Name or uid of an object to focus each view on. Fits all if omitted.
+    include_isometric: Whether to append the Isometric view spanning full width
+                       at the bottom of the composite. Default True.
+    display_mode: Force every visible ViewObject into a specific display mode for
+                  every tile (Wireframe / Hidden line is great for verifying
+                  internal cuts).
+    hide: Objects to hide while capturing.
+    show_only: Objects to isolate; everything else is hidden.
+    highlight: Objects or subelement refs to outline + select for the capture.
+    highlight_color: Optional RGB triple in [0,1].
+    camera_mode: Force the camera projection to "Perspective" or "Orthographic"
+                 for every tile. The viewport reverts to the user's original
+                 projection once the capture finishes. Defaults to the current
+                 projection if omitted.
+```
+
+## `get_selection`
+
+Source: `Parashell-Modules/Source/Bridge/tools/get_selection.py`
+
+Signature:
+
+```python
+get_selection() -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Get the objects the user currently has selected in the Parashell viewport.
+
+Returns each selected object with its document, internal name, label, TypeId,
+and any selected sub-elements (such as Face1, Edge3, Vertex2). Use this to
+resolve what the user means by "this", "that", or "the selected" object.
+```
+
+## `get_techdraw_page`
+
+Source: `Parashell-Modules/Source/Bridge/tools/get_techdraw_page.py`
+
+Signature:
+
+```python
+get_techdraw_page(page_name: str | None = None, doc_name: str | None = None, width: int | None = None, height: int | None = None) -> list[ImageContent | TextContent]
+```
+
+Descriptor:
+
+```text
+Render a TechDraw drawing page to a PNG image.
+
+TechDraw pages cannot be captured with the 3D viewport screenshot tools
+(get_view / get_ortho) because the drawing view has no offscreen 3D renderer.
+This tool exports the page to SVG via TechDraw and rasterizes it to a PNG so
+the drawing - its projected views, dimensions, annotations, and title block -
+can be seen directly. The page does not need to be the foreground tab.
+
+Args:
+    page_name: Name or label of the TechDraw page to render. Defaults to the
+               first page in the document. Use list_techdraw_pages to discover names.
+    doc_name: Name of the document. Defaults to the active document.
+    width: Output width in pixels. If only one of width/height is given, the
+           other is derived from the page aspect ratio. If both are omitted,
+           the page is rendered at a legible resolution preserving its aspect ratio.
+    height: Output height in pixels. See width.
+```
+
+## `get_view`
+
+Source: `Parashell-Modules/Source/Bridge/tools/get_view.py`
+
+Signature:
+
+```python
+get_view(view_name: Literal['Isometric', 'Front', 'Top', 'Right', 'Back', 'Left', 'Bottom', 'Dimetric', 'Trimetric'], width: int | None = None, height: int | None = None, focus_object: str | None = None, display_mode: Literal['Shaded', 'Wireframe', 'Flat Lines', 'Hidden line', 'Points', 'As is'] | None = None, hide: list[str] | None = None, show_only: list[str] | None = None, highlight: list[str] | None = None, highlight_color: list[float] | None = None, camera_mode: Literal['Perspective', 'Orthographic'] | None = None) -> list[ImageContent | TextContent]
+```
+
+Descriptor:
+
+```text
+Get a screenshot of the Parashell viewport from a named standard view.
+
+Visual overrides are applied for the duration of the screenshot, then every
+affected ViewObject is restored to its original Visibility / DisplayMode /
+LineColor / LineWidth. Targets accept either a stable uid from take_snapshot
+(e.g. "obj_a1b2c3...") or a plain object name. Subelements use either a
+sub_ uid or "ObjectName#Face3" notation.
+
+The viewport is fully settled before the image is captured, so the screenshot
+never shows a mid-transition camera. Any animation is disabled during the
+capture and re-enabled afterward.
+
+Args:
+    view_name: Standard view name - Isometric, Front, Top, Right, Back, Left, Bottom, Dimetric, or Trimetric.
+    width: Screenshot width in pixels. Defaults to viewport width.
+    height: Screenshot height in pixels. Defaults to viewport height.
+    focus_object: Object uid or name to focus on. Fits all objects if omitted.
+    display_mode: Force every visible ViewObject into a specific display mode for
+                  the screenshot. Useful for verifying internal cuts (Wireframe or
+                  Hidden line) or thin features (Wireframe).
+    hide: List of object uids or names to hide for the screenshot.
+    show_only: List of object uids or names - every other object is hidden,
+               isolating the listed targets. Useful for verifying a specific
+               pad / pocket / boolean.
+    highlight: List of object uids, "ObjectName#Face3" refs, or sub_ uids to
+               draw with a thick outline color and select for the screenshot.
+               Useful for tracing feature outlines on top of the model.
+    highlight_color: Optional RGB triple in [0,1] for the highlight outline.
+                     Defaults to bright orange (1.0, 0.4, 0.0).
+    camera_mode: Force the camera projection to "Perspective" or "Orthographic"
+                 for this screenshot. The viewport reverts to whatever projection
+                 the user had set once the capture finishes. Defaults to the
+                 current projection if omitted.
+```
+
+## `get_view_with_overlays`
+
+Source: `Parashell-Modules/Source/Bridge/tools/get_view_with_overlays.py`
+
+Signature:
+
+```python
+get_view_with_overlays(doc_name: str, view_name: Literal['Isometric', 'Front', 'Top', 'Right', 'Back', 'Left', 'Bottom', 'Dimetric', 'Trimetric'] = 'Isometric', bbox_objects: list[str] | None = None, measurements: list[dict[str, Any]] | None = None, title: str | None = None, show_axis_legend: bool = True, width: int | None = None, height: int | None = None, focus_object: str | None = None, display_mode: Literal['Shaded', 'Wireframe', 'Flat Lines', 'Hidden line', 'Points', 'As is'] | None = None, hide: list[str] | None = None, show_only: list[str] | None = None, highlight: list[str] | None = None) -> list[ImageContent | TextContent]
+```
+
+Descriptor:
+
+```text
+Get a viewport screenshot with axis legend, bounding-box dimensions, and distance overlays drawn on top.
+
+The base capture goes through the same pipeline as get_view (so display_mode,
+hide, show_only, highlight all work). Pillow then overlays:
+  - An optional title bar at the top (handy for build-stage labels).
+  - An XYZ axis legend in the corner (toggleable via show_axis_legend).
+  - A bounding-box dimensions panel listing each requested object's
+    x_length / y_length / z_length / center.
+  - A measurements panel listing each requested distance with its label
+    and per-axis components.
+
+measurements entries take the same form as measure_distance, plus an
+optional 'label':
+  [
+    {"a": "Tier1", "b": "Tier2", "label": "tier_gap"},
+    {"a": [0, 0, 0], "b": "Sun#Vertex1", "label": "core_radius"}
+  ]
+
+Args:
+    doc_name: Document containing referenced objects.
+    view_name: Standard view preset.
+    bbox_objects: Object names / uids whose bbox dimensions should be drawn.
+    measurements: List of distance entries (see above).
+    title: Optional title shown across the top of the image.
+    show_axis_legend: Whether to draw the XYZ axis legend. Default True.
+    width / height: Screenshot pixel dimensions.
+    focus_object: Object to focus on. Fits all if omitted.
+    display_mode / hide / show_only / highlight: Same semantics as get_view.
+```
+
+## `get_world_state`
+
+Source: `Parashell-Modules/Source/Bridge/tools/get_world_state.py`
+
+Signature:
+
+```python
+get_world_state(doc_name: str | None = None, include_feature_tree: bool = True, include_geometry: bool = True, max_objects: int = 400) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Capture a complete structured digest of the current Parashell scene as text.
+
+This is the authoritative, image-free description of the model. Use it to refresh
+your understanding of spatial state without spending a screenshot, and to record
+durable facts (positions, sizes, volumes, feature order, health) that survive once
+older screenshots scroll out of the conversation. Call it after a batch of edits,
+whenever you are unsure what currently exists, or before reasoning about geometry
+you last saw several turns ago.
+
+For each open document (or only doc_name) the digest reports:
+  - document metadata: name, label, file_name, is_active, modified, object_count
+  - category_counts: how many Bodies, Sketches, PartDesign features, Part
+    features, Datums, and Other objects exist
+  - model_bbox: the axis-aligned bounding box enclosing every object's geometry,
+    with min/max corners and x/y/z side lengths - the overall extent of the model
+  - unhealthy_count plus, per object: name, label, type_id, category, visibility,
+    placement (position, rotation axis, rotation angle in degrees), and the
+    'issues' tokens from the health scan (state:Invalid, must_execute, shape:null,
+    shape:invalid, shape:empty, shape:zero_volume)
+  - geometry per object (when include_geometry): volume, area, solid/face/edge
+    counts, and per-object bounding box
+  - bodies (when include_feature_tree): each PartDesign::Body's tip and ordered
+    feature_chain with sketch consumption links
+
+Prefer this over repeatedly capturing screenshots when you only need to confirm
+what exists, where it is, and whether it is valid. Reserve get_view / get_ortho for
+when you genuinely need to see rendered geometry.
+
+Args:
+    doc_name: Limit the digest to a single document. Omit to digest every open document.
+    include_feature_tree: Include PartDesign body feature chains. Default True.
+    include_geometry: Include per-object volume/area/counts/bbox and the model bbox. Default True.
+    max_objects: Cap the number of objects detailed per document (newest beyond the
+                 cap are summarized in counts only). Default 400.
+```
+
+## `list_techdraw_pages`
+
+Source: `Parashell-Modules/Source/Bridge/tools/list_techdraw_pages.py`
+
+Signature:
+
+```python
+list_techdraw_pages(doc_name: str | None = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+List the TechDraw drawing pages in a Parashell document.
+
+Returns each TechDraw::DrawPage with its label, template size (Width/Height in
+mm and orientation), page scale, and the child views placed on it (name, type,
+scale, projection direction, and source object). Use this to discover which
+page or view to render with get_techdraw_page.
+
+Args:
+    doc_name: Name of the document to inspect. Defaults to the active document.
+```
+
+## `list_view_baselines`
+
+Source: `Parashell-Modules/Source/Bridge/tools/list_view_baselines.py`
+
+Signature:
+
+```python
+list_view_baselines() -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+List the labels currently stored by capture_view_baseline.
+
+Returns the set of identifiers that compare_views can reference.
+```
+
+## `move_viewport`
+
+Source: `Parashell-Modules/Source/Bridge/tools/move_viewport.py`
+
+Signature:
+
+```python
+move_viewport(action: Literal['fit_all', 'zoom_in', 'zoom_out', 'zoom_to_object', 'navicube', 'pan', 'rotate', 'set_camera'], params: dict[str, Any] | None = None, get_screenshot: bool = True, width: int | None = None, height: int | None = None) -> list[ImageContent | TextContent]
+```
+
+Descriptor:
+
+```text
+Interact with the Parashell 3D viewport - navigate, zoom, orient the camera, and optionally get a screenshot.
+
+Supported actions and their params:
+
+- "fit_all": Zoom to fit all objects. No params needed.
+
+- "zoom_in": Zoom in. Params: {"factor": 1.25}
+
+- "zoom_out": Zoom out. Params: {"factor": 1.25}
+
+- "zoom_to_object": Zoom to a specific object. Params: {"object_name": "MyBox"}
+
+- "navicube": Set a named camera orientation (like clicking the NaviCube).
+  Params: {"preset": "Front"} - preset can be any of: Isometric, Front, Back,
+  Top, Bottom, Right, Left, Dimetric, Trimetric.
+
+- "pan": Pan the camera. Params: {"dx": 50, "dy": 0} - dx/dy in screen units.
+
+- "rotate": Rotate camera around an axis by degrees.
+  Params: {"axis": [0, 0, 1], "angle_deg": 45}
+
+- "set_camera": Set camera orientation directly.
+  Params: {"orientation": {"axis_x": 0, "axis_y": 0, "axis_z": 1, "angle_deg": 45},
+           "type": "Orthographic", "fit": true}
+
+Args:
+    action: The viewport action to perform.
+    params: Action-specific parameters dict.
+    get_screenshot: Whether to return a screenshot after the action. Default True.
+    width: Screenshot width in pixels.
+    height: Screenshot height in pixels.
+```
+
+## `reset_view`
+
+Source: `Parashell-Modules/Source/Bridge/tools/reset_view.py`
+
+Signature:
+
+```python
+reset_view(get_screenshot: bool = True, width: int | None = None, height: int | None = None) -> list[ImageContent | TextContent]
+```
+
+Descriptor:
+
+```text
+Reset the Parashell viewport to a standard isometric view with all objects fitted in frame.
+
+Equivalent to pressing Home or clicking the Isometric preset on the NaviCube and
+then fitting all objects. Useful after panning, zooming, or orbiting the model to
+get back to a clean reference view.
+
+Args:
+    get_screenshot: Whether to return a screenshot of the reset view. Default True.
+    width: Screenshot width in pixels.
+    height: Screenshot height in pixels.
+```
+
+## `take_snapshot`
+
+Source: `Parashell-Modules/Source/Bridge/tools/take_snapshot.py`
+
+Signature:
+
+```python
+take_snapshot(doc_name: str, include_subelements: bool = False) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Return a structured snapshot of a document with stable uids per object.
+
+Mirrors the chrome devtools take_snapshot pattern: every object is reported
+with a deterministic 'uid' that round-trips across calls (the uid is a hash
+of doc + object name, so the same object always returns the same uid). Use
+those uids in any other viewport tool that accepts a target - get_view,
+get_ortho, move_viewport, get_object, get_shape_info, edit_object, etc. all
+accept either a uid or a plain object name.
+
+Response shape:
+  - document, object_count, include_subelements
+  - tree: nested object tree (children come from Parashell's Group property,
+    so PartDesign bodies, App::Part containers, and Document groups are
+    rendered as parents). Each node carries:
+      uid, name, label, type_id, category, visible, display_mode,
+      shape_type, sub_counts {faces, edges, vertices}
+  - index: flat list of all uids and a few metadata fields, easy to scan
+    for a single match. Subelements appear with kind = "Face" / "Edge" /
+    "Vertex" and a 'ref' like "Pad001#Face3" for use in highlight params.
+
+When include_subelements is True, each shaped node also gets faces / edges /
+vertices arrays containing per-element uids plus a quick metric (face area
++ center, edge length, vertex position). This makes it possible to click /
+highlight individual faces by uid without having to enumerate them through
+execute_code.
+
+Args:
+    doc_name: Document to snapshot.
+    include_subelements: When True, list every face/edge/vertex of every
+                         shaped object with its own uid. Larger payload -
+                         keep False for whole-document overview.
+```

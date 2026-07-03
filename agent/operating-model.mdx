@@ -1,0 +1,85 @@
+---
+title: "Operating model"
+description: "Agent rules for Parashell MCP execution, transactions, validation, and safety"
+---
+
+This page encodes behavior for agents, not end-user instructions.
+
+## Naming contract
+
+- Product name: `Parashell`.
+- API compatibility phrase: `FreeCAD-compatible`.
+- Module imports inside `execute_code`: `import FreeCAD`, `import FreeCADGui`, `import Part`, `import Sketcher`, `import Draft`, `import Mesh`, `import TechDraw`, `import Arch`, `import Spreadsheet` as available.
+- Never equate Parashell with the upstream product.
+
+## Tool priority
+
+1. Use structured MCP tools for document, object, sketch, spreadsheet, viewport, validation, and transaction tasks.
+2. Use `calc_*` before any non-trivial derived dimension, vector, transform, tolerance, mass, clearance, angle, or equation result.
+3. Use `execute_code` when a typed MCP tool is absent, when exact API inspection is required, or after a concrete typed-tool failure blocks progress.
+4. Keep Python atomic. One coherent operation per snippet. Recompute before returning.
+
+## State model
+
+- `get_world_state` is the primary image-free state digest.
+- `take_snapshot` gives stable uids for objects and subelements. Prefer uids when object names are ambiguous.
+- `get_object` returns the complete property surface for one target.
+- `get_shape_info`, `get_bounding_box`, and `measure_distance` answer geometry-specific questions without executing Python.
+- `get_view` and `get_ortho` are required after creating or modifying visible geometry.
+
+## Transaction model
+
+Tools that accept `transaction_id` require an open transaction. Use this exact lifecycle:
+
+```text
+transaction_create(doc_name, label, reason)
+mutation_call(..., transaction_id)
+transaction_plan(transaction_id)
+transaction_apply(transaction_id)
+```
+
+Abort with:
+
+```text
+transaction_cancel(transaction_id)
+transaction_delete(transaction_id)  # only after cancellation, record cleanup only
+```
+
+`rollback_to_transaction` is destructive to newer applied work. Use only when the target applied transaction is known and discarding later work is intended or confirmed.
+
+## File-safety model
+
+- Use `is_file_saved` before substantial work.
+- Use `request_file_save` when a new or unsaved document needs a chosen `.FCStd` location.
+- `transaction_apply` recomputes and saves through the transaction layer.
+- `autosave` saves open documents and also runs before `execute_code`.
+
+## Validation gates
+
+Use validation proportional to the change:
+
+- Existence: `get_objects`, `get_object`, `get_world_state`.
+- Shape health: `check_objects`, `get_shape_info`.
+- Deep BRep validity: `check_geometry(run_bop_check=true)`.
+- Filled-solid verification: `verify_solid`.
+- Mass/center/inertia: `analyze_mass_properties`.
+- Assembly clash: `check_interferences(clearance=...)`.
+- Whole document: `validate_document(deep_geometry=true, run_bop_check=true)`.
+- Visual correctness: `get_view`, `get_ortho`, `get_view_with_overlays`, `compare_views`.
+
+Do not treat a clean recompute as proof of semantic correctness. Compare rendered views and measurements to the request.
+
+## Destructive operations
+
+Destructive operations include deleting objects or constraints, replacing geometry, clearing spreadsheet data, overwriting files, flattening assemblies, converting semantic BIM or parametric objects into history-less solids, and bulk reorganization. Inspect first, save first, state the exact effect, and require confirmation when the user has not already asked for that destructive act explicitly.
+
+## Failure protocol
+
+When a tool fails:
+
+- Stop the risky branch.
+- Preserve the document and open transaction.
+- Report the exact failed tool and returned error.
+- Inspect state before retrying.
+- Retry only if the next attempt changes one concrete cause.
+- If a typed tool repeatedly fails and the task is still valid, use scoped `execute_code` for that blocked step only, then return to structured tools.

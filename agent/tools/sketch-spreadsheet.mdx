@@ -1,0 +1,473 @@
+---
+title: "Sketch and spreadsheet tools"
+description: "Sketch geometry, sketch constraints, spreadsheet cells, aliases, formatting, dimensions, merges, structure, and CSV import/export."
+---
+
+Sketch geometry, sketch constraints, spreadsheet cells, aliases, formatting, dimensions, merges, structure, and CSV import/export.
+
+Tool count: `16`.
+
+Client note: `ctx` is injected by the MCP server and is not supplied as a user argument.
+
+## `add_sketch_constraints`
+
+Source: `Parashell-Modules/Source/Bridge/tools/add_sketch_constraints.py`
+
+Signature:
+
+```python
+add_sketch_constraints(doc_name: str, sketch_name: str, constraints: list[dict[str, Any]], recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Add one or more constraints to a Sketcher::SketchObject.
+
+Position ids accept ints (0=none/edge, 1=start, 2=end, 3=center) or names
+("none", "start", "end", "center"). Geometry indices are sketch geometry ids
+as returned by get_sketch (use -1 / -2 for the sketch X / Y axes, -3 for origin).
+
+Constraint schemas (one entry per constraint, "type" is required, "name" is optional):
+
+  - Coincident:    { "type": "Coincident", "first": id, "first_pos": pos,
+                     "second": id, "second_pos": pos }
+  - Horizontal:    { "type": "Horizontal", "first": geom_id }
+                   or two-point form with first/first_pos/second/second_pos
+  - Vertical:      same shape as Horizontal
+  - Equal:         { "type": "Equal", "first": id, "second": id }
+  - Parallel:      { "type": "Parallel", "first": id, "second": id }
+  - Perpendicular: { "type": "Perpendicular", "first": id, "second": id }
+  - Tangent:       { "type": "Tangent", "first": id, "second": id }
+                   optional: first_pos / second_pos for endpoint tangency
+  - Distance:      { "type": "Distance", "first": id, "value": mm }
+                   or point-to-point: first/first_pos/second/second_pos/value
+                   or point-to-edge:  first/first_pos/value
+  - DistanceX / DistanceY: same shapes as Distance
+  - Radius:        { "type": "Radius", "first": id, "value": mm }
+  - Diameter:      { "type": "Diameter", "first": id, "value": mm }
+  - Angle:         { "type": "Angle", "first": id, "second": id, "value": deg,
+                     "angle_unit": "deg" | "rad" (default "deg") }
+  - PointOnObject: { "type": "PointOnObject", "first": id, "first_pos": pos,
+                     "second": edge_id }
+  - Symmetric:     { "type": "Symmetric", "first": id, "first_pos": pos,
+                     "second": id, "second_pos": pos,
+                     "third": id, "third_pos": pos (optional, line form omits it) }
+  - Block:         { "type": "Block", "first": id }
+
+All constraints accept an optional "driving": false to make the constraint
+a reference (only meaningful for dimensional constraints).
+
+Args:
+    doc_name: Document containing the sketch.
+    sketch_name: Sketcher::SketchObject name to constrain.
+    constraints: List of constraint entry dicts.
+    recompute: Whether to recompute the sketch and document after adding.
+```
+
+## `clear_sketch_constraints`
+
+Source: `Parashell-Modules/Source/Bridge/tools/clear_sketch_constraints.py`
+
+Signature:
+
+```python
+clear_sketch_constraints(doc_name: str, sketch_name: str, indices: list[int] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Remove constraints from a Sketcher::SketchObject.
+
+If `indices` is omitted or None, every constraint on the sketch is removed.
+Otherwise only the constraints at the listed indices are removed. Indices
+refer to the constraint list as returned by get_sketch (Constraints[i].index).
+
+Args:
+    doc_name: Document containing the sketch.
+    sketch_name: Sketcher::SketchObject name.
+    indices: Specific constraint indices to remove. None / omitted clears all.
+    recompute: Whether to recompute the sketch and document after deletion.
+```
+
+## `clear_spreadsheet_cells`
+
+Source: `Parashell-Modules/Source/Bridge/tools/clear_spreadsheet_cells.py`
+
+Signature:
+
+```python
+clear_spreadsheet_cells(doc_name: str, sheet_name: str, ranges: list[str] | str, recompute: bool = True) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Clear the content and style of cells (delete).
+
+Args:
+    doc_name: Document containing the spreadsheet.
+    sheet_name: Spreadsheet object name.
+    ranges: A single cell ("B3"), a range ("A1:C10"), or a list of cells and
+        ranges to clear.
+    recompute: Recompute the document after clearing. Default True.
+```
+
+## `create_spreadsheet`
+
+Source: `Parashell-Modules/Source/Bridge/tools/create_spreadsheet.py`
+
+Signature:
+
+```python
+create_spreadsheet(doc_name: str, name: str = 'Spreadsheet', label: str | None = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Create a new Spreadsheet::Sheet object in a Parashell document.
+
+Spreadsheets hold tabular data and parametric values. Cells can carry
+literal text, numbers, or formulas (prefix with '='), and any cell can be
+given an alias so model expressions reference it by a readable name.
+
+Args:
+    doc_name: Document to create the spreadsheet in.
+    name: Internal object name. Parashell may adjust it to keep it unique.
+    label: Optional human-readable label shown in the tree.
+```
+
+## `edit_sketch_geometry`
+
+Source: `Parashell-Modules/Source/Bridge/tools/edit_sketch_geometry.py`
+
+Signature:
+
+```python
+edit_sketch_geometry(doc_name: str, sketch_name: str, operation: Literal['append', 'replace', 'delete'] = 'append', geometry: list[dict[str, Any]] | None = None, delete_indices: list[int] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Add, replace, or delete geometry entries in a Sketcher::SketchObject.
+
+Operations:
+  - "append": add `geometry` entries to the sketch (default).
+  - "replace": delete all existing geometry, then add `geometry` entries.
+  - "delete": remove geometry entries listed in `delete_indices`.
+
+Geometry entry schema (each item in `geometry`):
+  Common: { "type": <one of below>, "construction": bool (optional, default false) }
+
+  - LineSegment / Line:
+      { "type": "LineSegment", "start": [x, y] | {"x":..,"y":..,"z":..},
+        "end":   [x, y] | {...} }
+  - Circle:
+      { "type": "Circle", "center": [x, y] | {...}, "radius": float,
+        "normal": [x, y, z] (optional, default [0,0,1]) }
+  - ArcOfCircle / Arc:
+      { "type": "ArcOfCircle", "center": [...], "radius": float,
+        "start_angle": float, "end_angle": float,
+        "angle_unit": "deg" | "rad" (default "deg"),
+        "normal": [...] (optional) }
+  - Point:
+      { "type": "Point", "position": [x, y] | {...} }
+  - Ellipse:
+      { "type": "Ellipse", "center": [...], "major_radius": float,
+        "minor_radius": float,
+        "major_axis_direction": [...] (optional, default [1,0,0]) }
+
+Args:
+    doc_name: Document containing the sketch.
+    sketch_name: Sketcher::SketchObject name to edit.
+    operation: "append", "replace", or "delete".
+    geometry: List of geometry entries to add (used by append/replace).
+    delete_indices: Indices to remove (required for "delete").
+    recompute: Whether to recompute the sketch and document after editing.
+```
+
+## `export_spreadsheet_csv`
+
+Source: `Parashell-Modules/Source/Bridge/tools/export_spreadsheet_csv.py`
+
+Signature:
+
+```python
+export_spreadsheet_csv(doc_name: str, sheet_name: str, file_path: str, delimiter: str = '\t') -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Export a spreadsheet's cells to a delimited text file.
+
+Args:
+    doc_name: Document containing the spreadsheet.
+    sheet_name: Spreadsheet object name.
+    file_path: Absolute path of the file to write. Parent directories are created.
+    delimiter: Single-character field delimiter. Default is a tab.
+```
+
+## `get_sketch`
+
+Source: `Parashell-Modules/Source/Bridge/tools/get_sketch.py`
+
+Signature:
+
+```python
+get_sketch(doc_name: str, sketch_name: str) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Inspect a Sketcher::SketchObject and return a structured snapshot.
+
+Returns a JSON document containing:
+  - Name, Label, TypeId, Placement
+  - Attachment: { map_mode, support: [{object, subelement}, ...] }
+  - GeometryCount, Geometry: [{ index, type, construction, ...type-specific fields }]
+    Geometry types include LineSegment (start_point, end_point), Circle (center,
+    radius, normal), ArcOfCircle (center, radius, first/last_parameter_rad+deg,
+    start/end_point), Point (position), Ellipse, ArcOfEllipse, BSplineCurve.
+  - ConstraintCount, Constraints: [{ index, type, name, first, first_pos_id,
+    first_pos_name, second, second_pos_id, value, driving, active, ... }]
+  - OpenVertices, Shape summary
+
+Position ids: 0=none/edge, 1=start, 2=end, 3=center.
+
+Args:
+    doc_name: The name of the document containing the sketch.
+    sketch_name: The Sketcher::SketchObject name to inspect.
+```
+
+## `import_spreadsheet_csv`
+
+Source: `Parashell-Modules/Source/Bridge/tools/import_spreadsheet_csv.py`
+
+Signature:
+
+```python
+import_spreadsheet_csv(doc_name: str, sheet_name: str, file_path: str, delimiter: str = '\t', recompute: bool = True) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Import a delimited text file into a spreadsheet.
+
+If the named spreadsheet does not exist it is created. Existing cell data is
+overwritten by the imported file.
+
+Args:
+    doc_name: Document to import into.
+    sheet_name: Spreadsheet object name. Created if absent.
+    file_path: Absolute path to the file to import.
+    delimiter: Single-character field delimiter. Default is a tab.
+    recompute: Recompute the document afterward. Default True.
+```
+
+## `list_spreadsheets`
+
+Source: `Parashell-Modules/Source/Bridge/tools/list_spreadsheets.py`
+
+Signature:
+
+```python
+list_spreadsheets(doc_name: str) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+List every Spreadsheet::Sheet in a document with its used-cell count.
+
+Args:
+    doc_name: Document to inspect.
+```
+
+## `merge_spreadsheet_cells`
+
+Source: `Parashell-Modules/Source/Bridge/tools/merge_spreadsheet_cells.py`
+
+Signature:
+
+```python
+merge_spreadsheet_cells(doc_name: str, sheet_name: str, ranges: list[str] | str, action: Literal['merge', 'split'] = 'merge', recompute: bool = True) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Merge a rectangular range into one logical cell, or split a merged cell.
+
+Args:
+    doc_name: Document containing the spreadsheet.
+    sheet_name: Spreadsheet object name.
+    ranges: For "merge", one or more ranges like "A1:C1". For "split", the
+        top-left cell (or range) of each merged block to split.
+    action: "merge" to combine cells, "split" to undo a merge. Default "merge".
+    recompute: Recompute the document afterward. Default True.
+```
+
+## `modify_spreadsheet_structure`
+
+Source: `Parashell-Modules/Source/Bridge/tools/modify_spreadsheet_structure.py`
+
+Signature:
+
+```python
+modify_spreadsheet_structure(doc_name: str, sheet_name: str, operation: Literal['insert_rows', 'remove_rows', 'insert_columns', 'remove_columns'], index: str, count: int = 1, recompute: bool = True) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Insert or remove rows and columns, shifting existing cells accordingly.
+
+Args:
+    doc_name: Document containing the spreadsheet.
+    sheet_name: Spreadsheet object name.
+    operation: One of insert_rows, remove_rows, insert_columns, remove_columns.
+    index: For row operations, the row number as a string (e.g. "3"). For
+        column operations, the column letter (e.g. "B"). Inserts happen
+        before this index.
+    count: How many rows or columns to insert or remove. Default 1.
+    recompute: Recompute the document afterward. Default True.
+```
+
+## `read_spreadsheet`
+
+Source: `Parashell-Modules/Source/Bridge/tools/read_spreadsheet.py`
+
+Signature:
+
+```python
+read_spreadsheet(doc_name: str, sheet_name: str, cell_range: list[str] | str | None = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Read cells from a spreadsheet, returning content, computed value, alias, and styling.
+
+For each cell this returns the stored content (the literal or formula text),
+the evaluated value, and any alias, display unit, style, alignment, and
+foreground/background colors that are set.
+
+Args:
+    doc_name: Document containing the spreadsheet.
+    sheet_name: Spreadsheet object name.
+    cell_range: A single cell ("B3"), a range ("A1:C10"), or a list of cells
+        and ranges. If omitted, every used cell in the sheet is returned.
+```
+
+## `set_spreadsheet_aliases`
+
+Source: `Parashell-Modules/Source/Bridge/tools/set_spreadsheet_aliases.py`
+
+Signature:
+
+```python
+set_spreadsheet_aliases(doc_name: str, sheet_name: str, aliases: dict[str, str], recompute: bool = True) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Assign or remove cell aliases so model expressions can reference them by name.
+
+Once cell B1 has the alias "width", expressions elsewhere can use
+"Spreadsheet.width" and object properties can bind to it. Pass an empty
+string as the alias to remove an existing alias from a cell.
+
+Args:
+    doc_name: Document containing the spreadsheet.
+    sheet_name: Spreadsheet object name.
+    aliases: Mapping of cell address to alias, e.g. {"B1": "width", "B2": "height"}.
+    recompute: Recompute the document afterward. Default True.
+```
+
+## `set_spreadsheet_cells`
+
+Source: `Parashell-Modules/Source/Bridge/tools/set_spreadsheet_cells.py`
+
+Signature:
+
+```python
+set_spreadsheet_cells(doc_name: str, sheet_name: str, cells: dict[str, Any], recompute: bool = True) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Write content to one or more spreadsheet cells (create or update).
+
+Each value is stored as cell content: plain text stays text, a numeric
+string becomes a number, and a string starting with '=' becomes a formula
+(e.g. "=A1*B1" or "=Box.Length"). Setting a value to an empty string clears
+that cell's content.
+
+Args:
+    doc_name: Document containing the spreadsheet.
+    sheet_name: Spreadsheet object name.
+    cells: Mapping of cell address to content, e.g.
+        {"A1": "Width", "B1": "100", "B2": "=B1*2"}.
+    recompute: Recompute the document after writing. Default True.
+```
+
+## `set_spreadsheet_dimensions`
+
+Source: `Parashell-Modules/Source/Bridge/tools/set_spreadsheet_dimensions.py`
+
+Signature:
+
+```python
+set_spreadsheet_dimensions(doc_name: str, sheet_name: str, column_widths: dict[str, int] | None = None, row_heights: dict[str, int] | None = None, recompute: bool = True) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Set column widths and row heights in pixels.
+
+Args:
+    doc_name: Document containing the spreadsheet.
+    sheet_name: Spreadsheet object name.
+    column_widths: Mapping of column letter to width in pixels, e.g. {"A": 120}.
+    row_heights: Mapping of row number to height in pixels, e.g. {"1": 30}.
+    recompute: Recompute the document afterward. Default True.
+```
+
+## `style_spreadsheet_cells`
+
+Source: `Parashell-Modules/Source/Bridge/tools/style_spreadsheet_cells.py`
+
+Signature:
+
+```python
+style_spreadsheet_cells(doc_name: str, sheet_name: str, targets: list[str] | str, style: list[str] | None = None, foreground: list[float] | None = None, background: list[float] | None = None, alignment: list[str] | None = None, display_unit: str | None = None, style_options: Literal['replace', 'add', 'remove'] = 'replace', recompute: bool = True) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Apply text styling, colors, alignment, and display units to cells.
+
+Args:
+    doc_name: Document containing the spreadsheet.
+    sheet_name: Spreadsheet object name.
+    targets: A cell, a range ("A1:C1"), or a list of cells/ranges to style.
+    style: Font styles to apply, any of "bold", "italic", "underline".
+    foreground: Text color as [r, g, b] or [r, g, b, a] floats in 0..1.
+    background: Cell fill color as [r, g, b] or [r, g, b, a] floats in 0..1.
+    alignment: Alignment keywords, e.g. ["left"], ["center"], ["right"],
+        ["top"], ["vcenter"], ["bottom"].
+    display_unit: Display unit string applied to the cells, e.g. "mm".
+    style_options: How to apply style/alignment - "replace" (default),
+        "add", or "remove".
+    recompute: Recompute the document afterward. Default True.
+```

@@ -1,0 +1,376 @@
+---
+title: "Calcinator tools"
+description: "Scientific, symbolic, statistical, matrix, vector, and constant-resolution tools for derived CAD values."
+---
+
+Scientific, symbolic, statistical, matrix, vector, and constant-resolution tools for derived CAD values.
+
+Tool count: `16`.
+
+Client note: `ctx` is injected by the MCP server and is not supplied as a user argument.
+
+## `calc_capabilities`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_capabilities.py`
+
+Signature:
+
+```python
+calc_capabilities() -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Introspect the Calcinator scientific engine.
+
+Returns every available tool with its supported operations, the callable
+functions and constants reachable from calc_evaluate, and the installed
+numpy/scipy/sympy versions. Call this first to discover what is possible
+before invoking the other calc_* tools.
+```
+
+## `calc_constant`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_constant.py`
+
+Signature:
+
+```python
+calc_constant(name: str) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Look up a physical or mathematical constant.
+
+Args:
+    name: The constant name, e.g. 'pi', 'golden', 'speed of light in vacuum',
+        or any key from scipy.constants.physical_constants. Partial names
+        return suggestions.
+```
+
+## `calc_describe`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_describe.py`
+
+Signature:
+
+```python
+calc_describe(name: str) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Describe a single function or constant in the calc_evaluate namespace.
+
+Args:
+    name: Symbol to inspect (e.g. 'erf', 'np_linspace', 'pi'). Partial
+        names return close matches so you can discover the exact spelling.
+```
+
+## `calc_differentiate`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_differentiate.py`
+
+Signature:
+
+```python
+calc_differentiate(expression: str, variable: str = 'x', order: int = 1) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Compute the symbolic derivative of an expression.
+
+Args:
+    expression: The expression to differentiate, e.g. 'sin(x)*exp(x)'.
+    variable: The differentiation variable. Default 'x'.
+    order: The derivative order as a positive integer. Default 1.
+```
+
+## `calc_distribution`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_distribution.py`
+
+Signature:
+
+```python
+calc_distribution(name: str, operation: str, x: Any = None, params: list[float] | None = None, q: float | None = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Evaluate a SciPy probability distribution.
+
+Args:
+    name: The scipy.stats distribution name, e.g. 'norm', 'binom', 't'.
+    operation: One of pdf, cdf, ppf, stats. pdf/cdf need x, ppf needs q.
+    x: The value at which to evaluate pdf or cdf.
+    params: Distribution shape, location, and scale parameters in order.
+    q: A probability in (0, 1) for ppf (the inverse cdf).
+```
+
+## `calc_evaluate`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_evaluate.py`
+
+Signature:
+
+```python
+calc_evaluate(expression: str, variables: dict[str, Any] | None = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Numerically evaluate a scientific expression.
+
+Runs against a rich namespace: Python math/cmath, numpy (prefixed np_, e.g.
+np_linspace, np_mean), and the modules math, np, stats, optimize, linalg,
+special, constants, and sp. Use ** for powers and * for multiplication.
+
+Args:
+    expression: The expression to evaluate, e.g. 'sin(pi/4)**2 + cos(pi/4)**2'
+        or 'np_mean(np_array([1, 2, 3, 4]))'.
+    variables: Optional mapping of names to numbers or lists bound before
+        evaluation; lists become numpy arrays.
+```
+
+## `calc_integrate`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_integrate.py`
+
+Signature:
+
+```python
+calc_integrate(expression: str, variable: str = 'x', lower: Any = None, upper: Any = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Compute a definite or indefinite integral symbolically.
+
+Args:
+    expression: The integrand, e.g. 'x**2' or '1/x'.
+    variable: The integration variable. Default 'x'.
+    lower: Lower bound for a definite integral. Omit for an indefinite one.
+    upper: Upper bound for a definite integral. Omit for an indefinite one.
+```
+
+## `calc_limit`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_limit.py`
+
+Signature:
+
+```python
+calc_limit(expression: str, variable: str = 'x', point: Any = '0', direction: str = '+') -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Compute the limit of an expression as a variable approaches a point.
+
+Args:
+    expression: The expression, e.g. 'sin(x)/x'.
+    variable: The variable that approaches the point. Default 'x'.
+    point: Target value; accepts numbers or 'oo'/'-oo' for infinity. Default '0'.
+    direction: Approach side, one of '+', '-', or '+-'. Default '+'.
+```
+
+## `calc_matrix`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_matrix.py`
+
+Signature:
+
+```python
+calc_matrix(operation: str, matrix: list[list[Any]], matrix_b: list[list[Any]] | None = None, vector: list[Any] | None = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Perform linear algebra on matrices.
+
+Unary operations: determinant, inverse, transpose, rank, trace,
+eigenvalues, eigenvectors, nullspace, rref, norm. Binary operations:
+add, subtract, multiply (need matrix_b) and solve (needs vector as the
+right-hand side). Numeric matrices use numpy; symbolic entries use sympy.
+
+Args:
+    operation: The operation name from the lists above.
+    matrix: The primary matrix as a list of equal-length rows.
+    matrix_b: The second matrix for add, subtract, or multiply.
+    vector: The right-hand side for solve.
+```
+
+## `calc_product`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_product.py`
+
+Signature:
+
+```python
+calc_product(expression: str, variable: str = 'x', lower: Any = 1, upper: Any = 10) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Evaluate the product of an expression over an index range.
+
+Args:
+    expression: The factor, e.g. 'x'.
+    variable: The index variable. Default 'x'.
+    lower: Lower index bound. Default 1.
+    upper: Upper index bound. Default 10.
+```
+
+## `calc_series`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_series.py`
+
+Signature:
+
+```python
+calc_series(expression: str, variable: str = 'x', point: Any = 0, order: int = 6) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Compute the Taylor or Laurent series of an expression.
+
+Args:
+    expression: The expression to expand, e.g. 'exp(x)'.
+    variable: The expansion variable. Default 'x'.
+    point: The point to expand about. Default 0.
+    order: The truncation order as a positive integer. Default 6.
+```
+
+## `calc_solve`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_solve.py`
+
+Signature:
+
+```python
+calc_solve(equations: Any, unknowns: Any = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Solve an equation or a system of equations symbolically.
+
+Args:
+    equations: A single equation string or a list of them. Each may use '='
+        (e.g. 'x**2 - 5*x + 6 = 0') or be an expression assumed equal to zero.
+    unknowns: Optional symbol name or list of names to solve for. When omitted,
+        every free symbol is solved for.
+```
+
+## `calc_statistics`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_statistics.py`
+
+Signature:
+
+```python
+calc_statistics(operation: str, data: list[float], data_y: list[float] | None = None, confidence: float = 0.95, popmean: float = 0.0) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Compute statistics, correlation, regression, and hypothesis tests.
+
+Operations: describe, mean, median, std, variance, sum, min, max,
+correlation, linear_regression, confidence_interval, t_test_1samp,
+t_test_ind. The paired operations (correlation, linear_regression,
+t_test_ind) require data_y.
+
+Args:
+    operation: The operation name from the list above.
+    data: The primary numeric sample.
+    data_y: The second sample for paired operations.
+    confidence: Confidence level in (0, 1) for confidence_interval. Default 0.95.
+    popmean: Population mean tested by t_test_1samp. Default 0.0.
+```
+
+## `calc_summation`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_summation.py`
+
+Signature:
+
+```python
+calc_summation(expression: str, variable: str = 'x', lower: Any = 0, upper: Any = 10) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Evaluate the summation of an expression over an index range.
+
+Args:
+    expression: The summand, e.g. 'x**2'.
+    variable: The index variable. Default 'x'.
+    lower: Lower index bound. Default 0.
+    upper: Upper index bound; accepts 'oo' for infinite series. Default 10.
+```
+
+## `calc_transform`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_transform.py`
+
+Signature:
+
+```python
+calc_transform(expression: str, operation: str = 'simplify') -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Rewrite an expression with a symbolic transformation.
+
+Args:
+    expression: The expression to transform, e.g. '(x + 1)**2'.
+    operation: One of simplify, expand, factor, cancel, apart, together,
+        trigsimp, expand_trig, radsimp, ratsimp, powsimp, logcombine,
+        expand_log, nsimplify. Default 'simplify'.
+```
+
+## `calc_vector`
+
+Source: `Parashell-Modules/Source/Bridge/tools/calc_vector.py`
+
+Signature:
+
+```python
+calc_vector(operation: str, vector_a: list[Any], vector_b: Any = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Perform vector algebra.
+
+Operations: dot, cross, add, subtract, scale, norm, normalize, angle,
+projection. cross requires two 3-D vectors; scale expects vector_b to be a
+numeric scalar; norm and normalize ignore vector_b.
+
+Args:
+    operation: The operation name from the list above.
+    vector_a: The first vector as a 1-D list.
+    vector_b: The second vector, or a scalar for scale.
+```

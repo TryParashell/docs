@@ -1,0 +1,397 @@
+---
+title: "Compatible modules"
+description: "Dense map of FreeCAD-compatible Python modules available to Parashell agents"
+---
+
+This is a curated module map for `execute_code`. Use it with runtime introspection when exact symbols or properties are required.
+
+## Import policy
+
+```python
+import FreeCAD
+import FreeCADGui
+import Part
+import Sketcher
+import Draft
+import Mesh
+import TechDraw
+import Spreadsheet
+```
+
+Optional modules must be guarded:
+
+```python
+try:
+    import Arch
+except Exception:
+    Arch = None
+```
+
+## `FreeCAD`
+
+Core document, geometry-value, console, configuration, units, and application services.
+
+High-value symbols:
+
+```text
+ActiveDocument
+GuiUp
+Console.PrintMessage
+Console.PrintWarning
+Console.PrintError
+newDocument(name)
+openDocument(path)
+closeDocument(name)
+getDocument(name)
+activeDocument()
+setActiveDocument(name)
+listDocuments()
+getUserAppDataDir()
+getHomePath()
+ConfigGet(key)
+ConfigSet(key, value)
+ParamGet(path)
+Vector(x, y, z)
+Rotation(...)
+Placement(base, rotation)
+Matrix(...)
+BoundBox(...)
+Units.Quantity(value)
+```
+
+Document object operations:
+
+```text
+doc.Name
+doc.Label
+doc.FileName
+doc.Objects
+doc.ActiveObject
+doc.addObject(type_id, name)
+doc.getObject(name)
+doc.removeObject(name)
+doc.recompute()
+doc.save()
+doc.saveAs(path)
+doc.saveCopy(path)
+doc.openTransaction(label)
+doc.commitTransaction()
+doc.abortTransaction()
+```
+
+Use the MCP transaction tools instead of raw document transactions for bridge operations.
+
+## `FreeCADGui`
+
+GUI, selection, viewport, active view, commands, workbench, and main window access.
+
+High-value symbols:
+
+```text
+ActiveDocument
+activeDocument()
+getDocument(name)
+Selection.getSelection()
+Selection.getSelectionEx()
+Selection.clearSelection()
+Selection.addSelection(doc, object, subelement?)
+activeView()
+SendMsgToActiveView(message)
+runCommand(command_name)
+activateWorkbench(workbench_name)
+listWorkbenches()
+getMainWindow()
+updateGui()
+```
+
+Use MCP viewport tools for rendering instead of manual GUI capture where possible.
+
+## `Part`
+
+Boundary representation topology, primitive construction, wires, faces, solids, booleans, import/export, and geometric curves.
+
+Construction symbols:
+
+```text
+makeBox(length, width, height, base?, direction?)
+makeCylinder(radius, height, base?, direction?, angle?)
+makeSphere(radius, center?, axis?, angle1?, angle2?, angle3?)
+makeCone(radius1, radius2, height, base?, direction?, angle?)
+makeTorus(radius1, radius2, center?, axis?, angle1?, angle2?, angle3?)
+makePlane(length, width, base?, direction?)
+makePolygon(points)
+makeLine(point1, point2)
+LineSegment(start, end)
+Circle(center?, axis?, radius?)
+ArcOfCircle(circle, start_rad, end_rad)
+Point(vector)
+Ellipse(...)
+BSplineCurve()
+Wire(edges)
+Face(wire)
+Shell(faces)
+Solid(shell)
+Compound(shapes)
+show(shape, name?)
+export(objects, path)
+insert(path, doc_name)
+```
+
+Shape members commonly used by agents:
+
+```text
+ShapeType
+Volume
+Area
+Length
+BoundBox
+Vertexes
+Edges
+Wires
+Faces
+Shells
+Solids
+Compounds
+isNull()
+isValid()
+copy()
+fuse(shape_or_list)
+cut(shape_or_list)
+common(shape_or_list)
+removeSplitter()
+extrude(vector)
+revolve(base, axis, angle)
+makeFillet(radius, edges)
+makeChamfer(distance, edges)
+distToShape(other_shape)
+isInside(point, tolerance, check_on_boundary)
+```
+
+## `Sketcher`
+
+Sketch constraints and sketch object operations.
+
+Primary constructor:
+
+```text
+Sketcher.Constraint(type, ...)
+```
+
+Common constraint types:
+
+```text
+Coincident
+Horizontal
+Vertical
+Equal
+Parallel
+Perpendicular
+Tangent
+Distance
+DistanceX
+DistanceY
+Radius
+Diameter
+Angle
+PointOnObject
+Symmetric
+Block
+```
+
+Sketch object members:
+
+```text
+sketch.Geometry
+sketch.Constraints
+sketch.OpenVertices
+sketch.addGeometry(geom, construction)
+sketch.delGeometry(index)
+sketch.addConstraint(constraint)
+sketch.delConstraint(index)
+sketch.setDriving(index, bool)
+sketch.getConstruction(index)
+sketch.toggleConstruction(index)
+sketch.recompute()
+```
+
+Prefer MCP `get_sketch`, `edit_sketch_geometry`, and `add_sketch_constraints` when they cover the operation.
+
+## `Draft`
+
+2D and lightweight object construction/modification.
+
+Common creation functions:
+
+```text
+make_line(p1, p2)
+make_wire(points, closed=False)
+make_circle(radius, placement?)
+make_arc(...)
+make_rectangle(length, height)
+make_polygon(nfaces, radius)
+make_text(strings, point?)
+make_dimension(...)
+make_clone(obj)
+clone(obj)
+```
+
+Common modification functions:
+
+```text
+move(objects, vector, copy=False)
+rotate(objects, angle, center, axis?)
+scale(objects, delta, center?, copy=False)
+array(objects, ...)
+upgrade(objects)
+downgrade(objects)
+```
+
+Draft API naming can vary by version. Use runtime introspection for exact function names before relying on uncommon functions.
+
+## `Mesh`
+
+Mesh creation, import/export, and mesh features.
+
+Common symbols:
+
+```text
+Mesh.Mesh()
+mesh.read(path)
+mesh.write(path)
+mesh.addFacet(p1, p2, p3)
+mesh.CountFacets
+mesh.BoundBox
+mesh.Placement
+Mesh.export(objects, path)
+Mesh.insert(path, doc_name)
+```
+
+Document TypeId:
+
+```text
+Mesh::Feature
+```
+
+Mesh data is faceted and is not a parametric solid.
+
+## `MeshPart`
+
+Mesh/shape conversion utilities, when available.
+
+Common operations:
+
+```text
+meshFromShape(...)
+shapeFromMesh(...)
+```
+
+Use defensively:
+
+```python
+try:
+    import MeshPart
+except Exception:
+    MeshPart = None
+```
+
+## `TechDraw`
+
+Drawing pages, views, templates, dimensions, balloons, hatches, and rendered drawing outputs.
+
+Common TypeIds:
+
+```text
+TechDraw::DrawPage
+TechDraw::DrawSVGTemplate
+TechDraw::DrawViewPart
+TechDraw::DrawViewDraft
+TechDraw::DrawProjGroup
+TechDraw::DrawViewSection
+TechDraw::DrawViewDetail
+TechDraw::DrawViewDimension
+TechDraw::DrawViewBalloon
+TechDraw::DrawLeaderLine
+TechDraw::DrawViewAnnotation
+TechDraw::DrawViewSymbol
+TechDraw::DrawViewImage
+TechDraw::DrawHatch
+```
+
+Prefer MCP `list_techdraw_pages` and `get_techdraw_page` for discovery/rendering.
+
+## `Spreadsheet`
+
+Spreadsheet object TypeId:
+
+```text
+Spreadsheet::Sheet
+```
+
+Common sheet methods:
+
+```text
+sheet.set(address, content)
+sheet.get(address)
+sheet.getContents(address)
+sheet.setAlias(address, alias)
+sheet.getAlias(address)
+sheet.clear(address)
+sheet.mergeCells(range)
+sheet.splitCell(address_or_range)
+sheet.insertRows(row, count)
+sheet.removeRows(row, count)
+sheet.insertColumns(column, count)
+sheet.removeColumns(column, count)
+```
+
+Method names can vary. Use MCP spreadsheet tools first; they normalize common operations.
+
+## `Arch` / BIM modules
+
+Optional BIM/architecture modules. Import defensively.
+
+Common creation functions:
+
+```text
+makeWall(...)
+makeStructure(...)
+makeWindow(...)
+makeDoor(...)
+makeFloor(...)
+makeBuildingPart(...)
+makeSite(...)
+makeProject(...)
+makeSpace(...)
+makeRoof(...)
+makeStairs(...)
+makeFrame(...)
+makePanel(...)
+makeRebar(...)
+makePipe(...)
+makeEquipment(...)
+makeSectionPlane(...)
+```
+
+Preserve IFC metadata, hosted openings, levels/storeys, space relationships, and semantic object types.
+
+## `Fem`
+
+Finite-element analysis containers, constraints, meshes, materials, and solver objects.
+
+Use only for modeling/preparation unless authoritative simulation setup and validation are explicitly supplied. Do not certify engineering performance from object existence.
+
+Common TypeIds include analysis containers and FEM objects; discover exact available types with `doc.supportedTypes()` and `dir(Fem)` in the active build.
+
+## Import/export modules
+
+Common optional modules:
+
+```text
+Import
+ImportGui
+Mesh
+Part
+Draft importDXF/importSVG helpers
+```
+
+Use only for user-requested paths and formats. Validate before and after export.

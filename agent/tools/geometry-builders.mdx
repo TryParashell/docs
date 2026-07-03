@@ -1,0 +1,417 @@
+---
+title: "Geometry builder tools"
+description: "High-level geometry creation and boolean tools for common solid-building operations."
+---
+
+High-level geometry creation and boolean tools for common solid-building operations.
+
+Tool count: `11`.
+
+Client note: `ctx` is injected by the MCP server and is not supplied as a user argument.
+
+## `boolean_op`
+
+Source: `Parashell-Modules/Source/Bridge/tools/boolean_op.py`
+
+Signature:
+
+```python
+boolean_op(doc_name: str, operation: Literal['union', 'cut', 'intersect'], operands: list[str], result_name: str | None = None, delete_operands: bool = False, recompute: bool = True, verify_growth: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Run a single boolean operation on N operands in one call.
+
+Operations:
+  - "union" / "fuse":  result = operand[0].fuse(operand[1..N-1])
+  - "cut" / "difference":  result = operand[0] minus everything that follows
+  - "intersect" / "common":  intersection of all operands
+
+Replaces the chain of intermediate Part::Fuse / Part::Cut feature objects
+when you only care about the final shape. With delete_operands=True the
+source objects are removed after the boolean, leaving a clean tree.
+
+Operands accept names or take_snapshot uids.
+
+Growth verification (verify_growth=True, default) measures the operand and
+result volumes itself instead of trusting the kernel's success flag. It
+rejects results that are physically impossible for the requested operation:
+a union whose volume is smaller than its largest operand (the classic
+silently-dropped-operand / hollow-result failure), a union larger than the
+sum of its operands, an intersection or cut larger than its inputs, or any
+result that collapses to zero volume. When a violation is detected the
+boolean is aborted, no result object is created, and the response reports
+the measured volumes so the failure is caught programmatically rather than
+only on a section cut. Set verify_growth=False to bypass the guard.
+
+Args:
+    doc_name: Document containing the operands.
+    operation: "union", "cut", or "intersect".
+    operands: List of object names or uids (>= 2). Order matters for cuts.
+    result_name: Optional name for the result Part::Feature. Auto-generated
+                 when omitted.
+    delete_operands: When True, remove the source operands after the boolean.
+                     Default False.
+    recompute: Whether to recompute after creation. Default True.
+    verify_growth: When True (default), assert the result volume is
+                   consistent with the operation and abort on violation.
+```
+
+## `make_arch_opening`
+
+Source: `Parashell-Modules/Source/Bridge/tools/make_arch_opening.py`
+
+Signature:
+
+```python
+make_arch_opening(doc_name: str, name: str, width: float, height: float, depth: float, arch_kind: Literal['round', 'pointed', 'flat'] = 'round', arch_height: float | None = None, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Create an arched opening solid (rectangular base + arched top) in one call.
+
+The shape is positioned with the bottom of the rectangular section at z=0,
+centered on x=0, and extending along Y by 'depth'. Subtract this from a
+wall (boolean_op operation="cut") to punch a doorway, gateway, or window.
+
+Arch kinds:
+  - "round": semicircular arch - arch_height is fixed at width/2 and
+    'arch_height' is ignored. Total opening height must exceed width/2.
+  - "pointed": gothic-style isosceles triangle arch - arch_height defaults
+    to width when omitted.
+  - "flat": shallow segmental arch above a rectangle - arch_height defaults
+    to width/4 when omitted.
+
+Args:
+    doc_name: Document to add the opening solid to.
+    name: Name for the new Part::Feature.
+    width: Opening width in mm.
+    height: Total opening height in mm (rectangle + arch combined).
+    depth: Wall thickness the opening must pass through in mm.
+    arch_kind: "round", "pointed", or "flat".
+    arch_height: Override arch height. Ignored for round arches.
+    placement: Optional placement dict.
+    recompute: Whether to recompute after creation. Default True.
+```
+
+## `make_crenellated_wall`
+
+Source: `Parashell-Modules/Source/Bridge/tools/make_crenellated_wall.py`
+
+Signature:
+
+```python
+make_crenellated_wall(doc_name: str, name: str, length: float, thickness: float, height: float, merlon_width: float, gap_width: float, merlon_height: float, start_with_merlon: bool = True, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Create a crenellated wall - base wall with merlons on top - in one call.
+
+Replaces hand-placed merlon loops for castle walls, fortifications, garden
+walls, parapets. The base wall has height (height - merlon_height); the
+merlons sit on top and step along the wall length with width 'merlon_width'
+separated by gaps of 'gap_width'.
+
+Args:
+    doc_name: Document to add the wall to.
+    name: Name for the new Part::Feature.
+    length: Total wall length in mm.
+    thickness: Wall thickness in mm.
+    height: Total height including merlons in mm.
+    merlon_width: Width of each merlon along the wall in mm.
+    gap_width: Crenel (gap) width in mm.
+    merlon_height: Height of merlons above the base wall in mm.
+    start_with_merlon: When True, the wall begins with a merlon at x=0.
+                       When False, it begins with a gap.
+    placement: Optional placement dict.
+    recompute: Whether to recompute after creation. Default True.
+```
+
+## `make_gear`
+
+Source: `Parashell-Modules/Source/Bridge/tools/make_gear.py`
+
+Signature:
+
+```python
+make_gear(doc_name: str, name: str, module: float, tooth_count: int, thickness: float, pressure_angle_deg: float = 20.0, hub_radius: float = 0.0, bore_radius: float = 0.0, helix_angle_deg: float = 0.0, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Create an involute spur (or helical) gear in one call.
+
+Generates a true involute tooth profile, extrudes it to the requested
+thickness, optionally fuses an axial hub, and optionally cuts a central bore.
+Replaces hand-built gears made from boxes-as-teeth fused to a disc.
+
+Geometry:
+  pitch_radius = module * tooth_count / 2
+  addendum     = module
+  dedendum     = 1.25 * module
+  base_radius  = pitch_radius * cos(pressure_angle)
+
+Helical gears (helix_angle_deg != 0) are produced by lofting twisted copies
+of the tooth profile.
+
+Args:
+    doc_name: Document to add the gear to.
+    name: Name for the new Part::Feature.
+    module: Gear module in mm. Pitch diameter = module * tooth_count.
+    tooth_count: Number of teeth (>= 4).
+    thickness: Axial gear thickness in mm.
+    pressure_angle_deg: Standard 20 deg unless you need a custom value.
+    hub_radius: Optional cylindrical hub fused to the gear face. 0 = no hub.
+    bore_radius: Optional cylindrical bore through the center. 0 = no bore.
+    helix_angle_deg: Helical twist angle. 0 = spur gear.
+    placement: Optional placement dict.
+    recompute: Whether to recompute after creation. Default True.
+```
+
+## `make_hollow_box`
+
+Source: `Parashell-Modules/Source/Bridge/tools/make_hollow_box.py`
+
+Signature:
+
+```python
+make_hollow_box(doc_name: str, name: str, length: float, width: float, height: float, thickness: float, open_top: bool = False, open_bottom: bool = False, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Create a hollow box (outer minus inner) in one call.
+
+Replaces the manual outer-box-minus-inner-box pattern for curtain walls,
+moats, hollow plinths, container bodies. Outer dimensions are length x width
+x height; the cavity is shrunk by 'thickness' on each side.
+
+Args:
+    doc_name: Document to add the hollow box to.
+    name: Name for the new Part::Feature.
+    length / width / height: Outer dimensions in mm.
+    thickness: Wall thickness in mm. Must be < min(length, width)/2 and
+               (depending on open_top/bottom) < height/2.
+    open_top: When True, the top face is removed (no ceiling).
+    open_bottom: When True, the bottom face is removed (no floor).
+    placement: Optional placement dict.
+    recompute: Whether to recompute after creation. Default True.
+```
+
+## `make_hollow_cylinder`
+
+Source: `Parashell-Modules/Source/Bridge/tools/make_hollow_cylinder.py`
+
+Signature:
+
+```python
+make_hollow_cylinder(doc_name: str, name: str, outer_radius: float, height: float, thickness: float, open_top: bool = True, open_bottom: bool = False, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Create a hollow cylinder (outer cylinder minus inner cylinder) in one call.
+
+Replaces the manual outer-cylinder-minus-inner-cylinder pattern for wells,
+pipes, towers, silos. Inner radius = outer_radius - thickness.
+
+Args:
+    doc_name: Document to add the cylinder to.
+    name: Name for the new Part::Feature.
+    outer_radius: Outer radius in mm.
+    height: Height in mm.
+    thickness: Wall thickness in mm. Must be < outer_radius.
+    open_top: When True, the top is open. Default True (well-style).
+    open_bottom: When True, the bottom is open.
+    placement: Optional placement dict.
+    recompute: Whether to recompute after creation. Default True.
+```
+
+## `make_pyramid`
+
+Source: `Parashell-Modules/Source/Bridge/tools/make_pyramid.py`
+
+Signature:
+
+```python
+make_pyramid(doc_name: str, name: str, base_radius: float | None = None, base_sides: int = 4, height: float | None = None, base_rotation_deg: float = 0.0, base_points: list[list[float]] | None = None, apex: list[float] | None = None, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Create a pyramid solid in one call. Two modes:
+
+Regular polygon base (default):
+    Pass base_radius (circumscribed-circle radius), base_sides (>=3),
+    and height. The base sits on the XY plane centered at the origin,
+    the apex is at (0, 0, height). 'base_rotation_deg' rotates the base
+    polygon around its center for orientation tweaks. base_sides=4 gives
+    a square pyramid (keep roof), base_sides=3 a tetrahedron-style spike,
+    base_sides=8 an octagonal spire, and so on.
+
+Arbitrary polygon base:
+    Pass base_points as a list of [x, y, z] points (any planar polygon)
+    plus apex as a single [x, y, z] point. Useful for irregular roofs.
+
+Args:
+    doc_name: Document to add the pyramid to.
+    name: Name for the new Part::Feature.
+    base_radius: Circumscribed-circle radius for the regular base.
+    base_sides: Number of sides for the regular base (>=3). Default 4.
+    height: Apex height above the regular base in mm.
+    base_rotation_deg: Rotate the regular base around its center.
+    base_points: Optional list of [x,y,z] points for an irregular base.
+    apex: Apex point [x,y,z] when base_points is supplied.
+    placement: Optional placement dict applied to the whole pyramid.
+    recompute: Whether to recompute after creation. Default True.
+```
+
+## `make_ring`
+
+Source: `Parashell-Modules/Source/Bridge/tools/make_ring.py`
+
+Signature:
+
+```python
+make_ring(doc_name: str, name: str, outer_radius: float, thickness: float, inner_radius: float = 0.0, tilt_deg: float = 0.0, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Create a ring (or solid disc when inner_radius=0) in one call.
+
+Replaces the manual outer-cylinder-minus-inner-cylinder pattern. The optional
+tilt_deg rotates the ring about the X axis, useful for Saturn-style rings or
+tilted orbital tracks. Custom placements (translation + rotation) override
+the default flat XY orientation.
+
+Args:
+    doc_name: Document to add the ring to.
+    name: Name for the new Part::Feature.
+    outer_radius: Outer ring radius (mm).
+    thickness: Ring thickness along the local Z axis (mm).
+    inner_radius: Inner radius (mm). 0 produces a solid disc.
+    tilt_deg: Rotation about local X axis applied after construction.
+    placement: Optional placement dict {"Base": {x,y,z}, "Rotation": {Axis: {x,y,z}, Angle: deg}}.
+    recompute: Whether to recompute after creation. Default True.
+```
+
+## `make_segment_between_points`
+
+Source: `Parashell-Modules/Source/Bridge/tools/make_segment_between_points.py`
+
+Signature:
+
+```python
+make_segment_between_points(doc_name: str, name: str, p1: list[float], p2: list[float], cross_section: Literal['circular', 'box'] = 'circular', radius: float | None = None, width: float | None = None, height: float | None = None, end_caps: Literal['flat', 'round'] = 'flat', recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Create a segment (cylinder or box) between two world-space points.
+
+The required cross-section dimensions depend on 'cross_section':
+  - "circular": pass 'radius'. Optional 'end_caps="round"' fuses
+    hemispherical caps on each tip.
+  - "box": pass 'width' (and optional 'height'; defaults to width for square cross-section).
+    The box is centered on the segment axis.
+
+Direction vector and rotation are computed automatically - replaces manual
+Vector / Rotation cross-product math for diagonals like gatehouse chains,
+diagonal struts, frame elements, support cables, gantry rails.
+
+Args:
+    doc_name: Document to add the segment to.
+    name: Name for the new Part::Feature.
+    p1: Start point [x, y, z] in mm.
+    p2: End point [x, y, z] in mm.
+    cross_section: "circular" or "box". Default circular.
+    radius: Segment radius for circular cross-section.
+    width: Box width for box cross-section.
+    height: Box height for box cross-section. Defaults to width.
+    end_caps: For circular cross-section only - "flat" or "round".
+    recompute: Whether to recompute after creation. Default True.
+```
+
+## `make_sketch_extrude`
+
+Source: `Parashell-Modules/Source/Bridge/tools/make_sketch_extrude.py`
+
+Signature:
+
+```python
+make_sketch_extrude(doc_name: str, name: str, profile: list[dict[str, Any]], depth: float, direction: list[float] | None = None, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Build a 2D profile from line/arc segments and extrude it into a solid.
+
+The profile is a list of geometry dicts using the same schema as
+edit_sketch_geometry. Edges must form a closed loop. Common entries:
+
+  LineSegment:
+    {"type": "LineSegment", "start": [x, y], "end": [x, y]}
+
+  ArcOfCircle:
+    {"type": "ArcOfCircle", "center": [x, y], "radius": r,
+     "start_angle": deg_or_rad, "end_angle": deg_or_rad,
+     "angle_unit": "deg" | "rad"}
+
+  Other supported types: Circle (closed-loop only), Point, Ellipse.
+
+Use this for arrow slits, pointed-arch windows, gothic shapes, custom
+door cutouts, irregular plate outlines - anything that's hard to express
+as a chain of boolean primitives.
+
+Args:
+    doc_name: Document to add the extrusion to.
+    name: Name for the new Part::Feature.
+    profile: List of geometry dicts forming a closed wire on the XY plane.
+    depth: Extrusion depth in mm. Positive = +Z when 'direction' is omitted.
+    direction: Optional [dx, dy, dz] extrusion direction. Defaults to +Z.
+    placement: Optional placement applied after extrusion (translate/rotate
+               the whole solid).
+    recompute: Whether to recompute after creation. Default True.
+```
+
+## `make_strut_between_points`
+
+Source: `Parashell-Modules/Source/Bridge/tools/make_strut_between_points.py`
+
+Signature:
+
+```python
+make_strut_between_points(doc_name: str, name: str, p1: list[float], p2: list[float], radius: float, end_caps: Literal['flat', 'round'] = 'flat', recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Create a cylindrical strut between two world-space points.
+
+Computes the direction vector and rotation automatically - replaces manual
+Vector / Rotation math for diagonal supports, frame elements, gantry struts.
+
+Args:
+    doc_name: Document to add the strut to.
+    name: Name for the new Part::Feature.
+    p1: Start point [x, y, z] in mm.
+    p2: End point [x, y, z] in mm.
+    radius: Strut radius in mm.
+    end_caps: "flat" (default) or "round" (hemispherical caps fused on each end).
+    recompute: Whether to recompute after creation. Default True.
+```

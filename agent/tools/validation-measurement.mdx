@@ -1,0 +1,370 @@
+---
+title: "Validation and measurement tools"
+description: "Geometry health, mass properties, solid verification, interference checks, bounding boxes, and distance measurement."
+---
+
+Geometry health, mass properties, solid verification, interference checks, bounding boxes, and distance measurement.
+
+Tool count: `9`.
+
+Client note: `ctx` is injected by the MCP server and is not supplied as a user argument.
+
+## `analyze_mass_properties`
+
+Source: `Parashell-Modules/Source/Bridge/tools/analyze_mass_properties.py`
+
+Signature:
+
+```python
+analyze_mass_properties(doc_name: str, target: str, density: float | None = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Compute mass/inertia properties of a solid for engineering validation.
+
+Answers the mathematical "does this part have the physical properties I
+expect?" question. For the target shape it reports:
+  - volume (mm^3), area (mm^2), length (mm, for wire/edge targets)
+  - center_of_mass (x, y, z)
+  - matrix_of_inertia: the full 4x4 inertia matrix as nested lists
+  - principal_properties: Parashell's PrincipalProperties - symmetry point,
+    principal moments of inertia, principal axes (first/second/third),
+    radius of gyration, and moments about the center of mass - serialized
+    as plain numbers and vectors
+  - bbox: full bounding box with center and diagonal
+
+When density (kg/mm^3 or any consistent unit) is supplied, also returns mass
+(volume * density) and density-scaled principal moments, so you can sanity
+check weight and balance.
+
+Use to verify a created part is solid (non-zero volume), centered where you
+intended, or symmetric about the expected axis.
+
+Args:
+    doc_name: Document containing the object.
+    target: Object name, 'Object#Face3'/'Object#Edge2' subelement reference,
+            or a snapshot uid.
+    density: Optional material density. When provided, mass and density-scaled
+             moments are included. Keep units consistent with the model
+             (mm-based volume).
+```
+
+## `check_geometry`
+
+Source: `Parashell-Modules/Source/Bridge/tools/check_geometry.py`
+
+Signature:
+
+```python
+check_geometry(doc_name: str, obj_names: list[str] | None = None, run_bop_check: bool = True, min_edge_length: float = 1e-07, min_face_area: float = 1e-09, only_invalid: bool = False) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Run a deep OCC geometry validity scan on the shapes you just built.
+
+Where check_objects reports the parametric/document health (state flags,
+must_execute, null/empty shape), this tool drills into the actual BRep solid
+to answer "is this part geometrically and topologically sound?". For each
+object with a Shape it reports:
+  - is_null, is_valid, is_closed (top-level OCC flags)
+  - counts: solids, shells, faces, wires, edges, vertices
+  - tolerance: average / max / min modelling tolerance of the shape
+  - invalid_subshapes: every Face/Edge/Wire/Solid that fails isValid(),
+    named like 'Face3' / 'Edge12' so you can target a repair
+  - short_edges: edges shorter than min_edge_length (sliver edges that break
+    downstream fillets/booleans), each with its length
+  - degenerate_faces: faces with area below min_face_area
+  - open_shells: shells that are not closed (a solid that should be watertight
+    but is not, e.g. after a failed boolean)
+  - bop_check: result of Shape.check() - the Boolean Operation checker that
+    finds self-intersections and bad geometry; 'ok', 'invalid', or the OCC
+    error text
+  - issues: short tokens (shape:null, shape:invalid, subshapes:invalid,
+    edges:short, faces:degenerate, shells:open, bop:problems)
+  - valid: convenience boolean, true when issues is empty
+
+Use immediately after create_object, boolean_op, make_* helpers, or
+make_sketch_extrude to confirm the produced solid is manufacturable before
+building further features on top of it.
+
+Args:
+    doc_name: Document to inspect.
+    obj_names: Specific objects (names or snapshot uids). If omitted, scans
+               every object that has a Shape.
+    run_bop_check: Run the heavier Boolean Operation self-intersection check
+                   (Shape.check(True)). Default True. Set False for a faster
+                   structural-only pass on large assemblies.
+    min_edge_length: Edges shorter than this (mm) are flagged as slivers.
+    min_face_area: Faces with area below this (mm^2) are flagged as degenerate.
+    only_invalid: When True, only objects with at least one issue are returned.
+```
+
+## `check_interferences`
+
+Source: `Parashell-Modules/Source/Bridge/tools/check_interferences.py`
+
+Signature:
+
+```python
+check_interferences(doc_name: str, obj_names: list[str] | None = None, clearance: float = 0.0, compute_volume: bool = True) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Detect solid-on-solid clashes and clearance violations in an assembly.
+
+Performs read-only pairwise interference checking across the solids in the
+document using Parashell's measurement APIs only - no boolean geometry is
+constructed and the document is left completely unchanged. Bounding boxes
+skip non-overlapping pairs first; remaining pairs are tested with
+Shape.distToShape (gap measurement) and Solid.isInside point-containment on
+sampled vertices/edge/face centers. For each relevant pair it reports:
+  - status: 'interference' (one solid's sampled points fall inside the other,
+    i.e. they physically penetrate), 'contact' (touching, distance ~0 with no
+    interior penetration), 'clearance_violation' (separated but closer than
+    the requested clearance), or 'error' (the measurement failed)
+  - distance: the measured minimum gap between the two solids
+  - interior_sample_count and overlap_region (sampled-point bounds) for
+    interferences when compute_volume is True
+
+The summary reports solid_count, pairs evaluated, interference_count,
+contact_count, and clearance_violation_count.
+
+Use after positioning multiple parts (patterns, struts, inserted library
+parts) to confirm nothing collides or sits too close before exporting or
+booleaning them together.
+
+Args:
+    doc_name: Document to inspect.
+    obj_names: Specific objects (names or snapshot uids) to test against each
+               other. If omitted, every visible solid in the document is used.
+    clearance: Minimum allowed gap (mm) between non-touching solids. When > 0,
+               pairs closer than this are reported as clearance violations.
+               Default 0.0 reports only true interferences and contacts.
+    compute_volume: When True, report the sampled interior point count and the
+                    bounds of the penetrating region for each interfering pair.
+                    Set False for a faster status-only scan.
+```
+
+## `check_objects`
+
+Source: `Parashell-Modules/Source/Bridge/tools/check_objects.py`
+
+Signature:
+
+```python
+check_objects(doc_name: str, obj_names: list[str] | None = None, only_unhealthy: bool = False) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Inspect the validity of one or more objects in a Parashell document.
+
+Runs a non-destructive health scan (no recompute). For each object reports:
+  - state flags (Parashell's internal State list, e.g. Touched, Invalid, Restore Error)
+  - must_execute (whether the object still requires re-execution)
+  - shape diagnostics (when a Shape exists): type, is_null, is_valid, is_closed,
+    volume, area, vertex_count, edge_count, face_count, solid_count, bbox
+  - sketch diagnostics (for Sketcher::SketchObject): geometry/constraint counts,
+    fully_constrained, open_vertex_count, map_mode
+  - issues: a list of short tokens describing why the object is unhealthy
+    (state:Invalid, must_execute, shape:null, shape:invalid, shape:empty,
+    shape:zero_volume)
+  - healthy: convenience boolean (true when issues is empty)
+
+Use this after a sketch swap, attachment edit, or feature parameter change to
+confirm dependent features (Pad, Pocket, Boolean, Fillet, etc.) still produce
+valid geometry. Pair with recompute_document when you need to force the
+re-evaluation first.
+
+Args:
+    doc_name: Document to inspect.
+    obj_names: Specific objects to check. If omitted, checks every object in the document.
+    only_unhealthy: When True, the returned 'objects' list is filtered to entries
+                    with at least one issue. The unhealthy_count and missing_objects
+                    fields are still reported regardless.
+```
+
+## `get_bounding_box`
+
+Source: `Parashell-Modules/Source/Bridge/tools/get_bounding_box.py`
+
+Signature:
+
+```python
+get_bounding_box(doc_name: str, target: str) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Return the bounding box of an object or subelement.
+
+Target accepts a plain object name, a take_snapshot uid (obj_/sub_), or a
+subelement reference like "Pad001#Face3". Reports min/max in each axis,
+side lengths (x_length / y_length / z_length), center, and 3D diagonal.
+
+Args:
+    doc_name: Document containing the target.
+    target: Object name, uid, or "Object#Face3"-style reference.
+```
+
+## `get_shape_info`
+
+Source: `Parashell-Modules/Source/Bridge/tools/get_shape_info.py`
+
+Signature:
+
+```python
+get_shape_info(doc_name: str, obj_name: str) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Return shape diagnostics for a single object without writing Python.
+
+Reports state flags, must_execute, and shape diagnostics: type, is_null, is_valid,
+is_closed, volume, area, vertex/edge/face/solid counts, and bounding box (with
+min/max plus side lengths). For Sketcher::SketchObject it also includes geometry
+and constraint counts plus map_mode. The 'issues' field summarizes any problems
+(state:Invalid, must_execute, shape:null, shape:invalid, shape:empty,
+shape:zero_volume) and 'healthy' is true when 'issues' is empty.
+
+Use this for one-off "is this Pad/Pocket/Boolean still producing valid geometry?"
+checks. For multi-object scans, use check_objects.
+
+Args:
+    doc_name: Document containing the object.
+    obj_name: Object name to inspect.
+```
+
+## `measure_distance`
+
+Source: `Parashell-Modules/Source/Bridge/tools/measure_distance.py`
+
+Signature:
+
+```python
+measure_distance(doc_name: str, a: Any, b: Any) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Measure the distance between two points, objects, or subelements.
+
+Each of 'a' and 'b' can be:
+  - An object name or uid (uses the shape's center of mass / bbox center)
+  - A subelement reference like "Pad001#Vertex2", "Pad001#Edge5", or
+    "Pad001#Face3" (uses Vertex.Point, Edge midpoint via CenterOfMass,
+    or face center)
+  - A literal point: [x, y, z] or {"x": .., "y": .., "z": ..}
+
+Returns the absolute distance plus per-axis distances (distance_x/y/z) and
+the resolved point coordinates so the math can be verified.
+
+Args:
+    doc_name: Document containing referenced objects.
+    a: First endpoint identifier or literal point.
+    b: Second endpoint identifier or literal point.
+```
+
+## `validate_document`
+
+Source: `Parashell-Modules/Source/Bridge/tools/validate_document.py`
+
+Signature:
+
+```python
+validate_document(doc_name: str, deep_geometry: bool = False, run_bop_check: bool = False) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Run a whole-document introspective validation and return a single verdict.
+
+Aggregates every other diagnostic into one pass so the model can ask "is the
+document I just built internally consistent?". It reports:
+  - valid: overall boolean - true only when no problems are found
+  - problem_summary: human-readable list of every problem category hit
+  - unhealthy_objects: per-object health (state flags, must_execute, shape
+    diagnostics) for objects that fail the health scan
+  - dangling_links: link properties that point at objects which no longer
+    exist (object, property, target)
+  - dependency_cycles: cycles in the recompute dependency graph (each cycle
+    as an ordered list of object names) - these break recompute
+  - touched_objects: objects still flagged Touched (a recompute is pending)
+  - geometry_problems: when deep_geometry is True, per-object OCC geometry
+    diagnostics for any object whose BRep is invalid
+
+Use as a final gate after a build sequence, or whenever a recompute behaves
+unexpectedly, to locate the root cause without running each checker by hand.
+
+Args:
+    doc_name: Document to validate.
+    deep_geometry: When True, also run the OCC geometry validity scan
+                   (check_geometry) on every shaped object and include any
+                   failures. Slower; off by default.
+    run_bop_check: Only relevant when deep_geometry is True. Runs the
+                   Boolean Operation self-intersection check on each shape.
+```
+
+## `verify_solid`
+
+Source: `Parashell-Modules/Source/Bridge/tools/verify_solid.py`
+
+Signature:
+
+```python
+verify_solid(doc_name: str, target: str, samples: int = 8, tolerance: float = 1e-07, expected_solids: int = 1, min_fill_ratio: float = 0.0, max_volume_discrepancy: float = 0.25) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Introspectively verify that a shape is a real, filled solid.
+
+Detects the silent "valid but hollow" failure mode where the kernel reports
+isValid=True and one solid, yet the body is an empty shell (for example
+after a boolean that dropped an operand). Instead of trusting the kernel's
+self-report, this samples the interior directly: it builds a 3D grid inside
+the bounding box, tests each point with Solid.isInside, walks the three
+axis centerlines, checks whether the center of mass lies inside the body,
+and compares the kernel's reported volume against the volume implied by the
+interior sampling.
+
+Returns passed (bool), a list of hard failures, a list of warnings, and a
+full metrics block (solid_count, shells_per_solid, volume, area, bbox,
+fill_ratio, grid sampling counts, grid_volume_estimate, volume_discrepancy,
+per-axis interior fractions, and center_of_mass_inside).
+
+Hard failures (passed=False): no solids, zero/negative volume, the volume
+could not be computed, or not a single interior sample point fell inside the
+shape (hollow). Warnings flag suspicious-but-not-fatal conditions: unexpected
+solid count, fill ratio below min_fill_ratio, volume discrepancy above
+max_volume_discrepancy, extra shells (internal voids), a center of mass
+outside the body, or an axis centerline with no interior hits.
+
+Args:
+    doc_name: Document containing the object.
+    target: Object name, 'Object#Solid1' subelement reference, or a
+            snapshot uid.
+    samples: Grid resolution per axis for interior sampling (clamped to
+             2..40). Higher values are more thorough but slower. Default 8.
+    tolerance: isInside tolerance in mm. Default 1e-7.
+    expected_solids: Solid count to expect; a mismatch is reported as a
+                     warning. Default 1.
+    min_fill_ratio: Minimum acceptable volume/bbox_volume ratio. 0 disables
+                    the check (default).
+    max_volume_discrepancy: Maximum allowed relative gap between the reported
+                            volume and the interior-sampled volume before a
+                            warning is raised. Default 0.25 (25%).
+```

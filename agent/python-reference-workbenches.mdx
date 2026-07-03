@@ -1,0 +1,2090 @@
+---
+title: "Python reference: workbench stubs"
+description: "Generated workbench FreeCAD-compatible API stub reference from /Parashell"
+---
+
+Generated from `/Parashell/**/*.pyi` only. Module names and import names are compatibility-layer names. Descriptions are normalized to avoid identifying Parashell as the upstream product.
+
+```text
+stub_files_in_page: 47
+source_root: Parashell
+```
+
+```text
+MODULE src/Mod/Assembly/App/AssemblyLink.pyi
+classes:
+  class AssemblyLink(Part)
+    doc:
+      This class handles document objects in Assembly
+    attributes:
+      - Joints: Final[list]
+        doc:
+          A list of all joints this assembly link has.
+```
+
+```text
+MODULE src/Mod/Assembly/App/AssemblyObject.pyi
+classes:
+  class AssemblyObject(Part)
+    doc:
+      This class handles document objects in Assembly
+    attributes:
+      - Joints: Final[list]
+        doc:
+          A list of all joints this assembly has.
+    methods:
+      @constmethod
+      - def solve(self, enableUndo: bool=False, /) -> int
+        doc:
+          Solve the assembly and update part placements.
+        
+          Args:
+          enableRedo: Whether the solve save the initial position of parts
+          to enable undoing it even without a transaction.
+          Defaults to `False` ie the solve cannot be undone if called
+          outside of a transaction.
+        
+          Returns:
+          0 in case of success, otherwise the following codes in this order of
+          priority:
+          -6 if no parts are fixed.
+          -4 if over-constrained,
+          -3 if conflicting constraints,
+          -5 if malformed constraints
+          -1 if solver error,
+          -2 if redundant constraints.
+      @constmethod
+      - def generateSimulation(self, simulationObject: DocumentObject, /) -> int
+        doc:
+          Generate the simulation.
+        
+          Args:
+          simulationObject: The simulation Object.
+        
+          Returns:
+          0 in case of success, otherwise the following codes in this order of
+          priority:
+          -6 if no parts are fixed.
+          -4 if over-constrained,
+          -3 if conflicting constraints,
+          -5 if malformed constraints
+          -1 if solver error,
+          -2 if redundant constraints.
+      @constmethod
+      - def updateForFrame(self, index: int, /) -> None
+        doc:
+          Update entire assembly to frame number specified.
+        
+          Args:
+          index: index of frame.
+        
+          Returns: None
+      @constmethod
+      - def numberOfFrames(self) -> int
+        doc:
+          Return Number of frames
+      @constmethod
+      - def updateSolveStatus(self) -> Any
+        doc:
+          updateSolveStatus()
+        
+          Args: None
+        
+          Returns: None
+      @constmethod
+      - def undoSolve(self) -> Any
+        doc:
+          Undo the last solve of the assembly and return part placements to their initial position.
+        
+          undoSolve()
+        
+          Returns: None
+      @constmethod
+      - def ensureIdentityPlacements(self) -> None
+        doc:
+          Makes sure that LinkGroups or sub-assemblies have identity placements.
+      @constmethod
+      - def clearUndo(self) -> None
+        doc:
+          Clear the registered undo positions.
+      @constmethod
+      - def isPartConnected(self, obj: DocumentObject, /) -> bool
+        doc:
+          Check if a part is connected to the ground through joints.
+          Returns: True if part is connected to ground.
+      @constmethod
+      - def isJointConnectingPartToGround(self, joint: DocumentObject, prop_name: str, /) -> Any
+        doc:
+          Check if a joint is connecting a part to the ground.
+        
+          Args:
+          - joint: document object of the joint to check.
+          - prop_name: string 'Part1' or 'Part2' of the joint.
+        
+          Returns: True if part is connected to ground.
+      @constmethod
+      - def isPartGrounded(self, obj: DocumentObject, /) -> Any
+        doc:
+          Check if a part has a grounded joint.
+        
+          Args:
+          - obj: document object of the part to check.
+        
+          Returns: True if part has grounded joint.
+      @constmethod
+      - def exportAsASMT(self, file_name: str, /) -> None
+        doc:
+          Export the assembly in a text format called ASMT.
+        
+          Args:
+          - fileName: The name of the file where the ASMT will be exported.
+      @constmethod
+      - def getDownstreamParts(self, start_part: DocumentObject, joint_to_ignore: DocumentObject, /) -> list[DocumentObject]
+        doc:
+          Finds all parts connected to a start_part that are not connected to ground
+          when a specific joint is ignored.
+        
+          This is used to find the entire rigid group of unconstrained components that
+          should be moved together during a pre-solve operation or a drag.
+        
+          Args:
+          start_part: The App.DocumentObject to begin the search from.
+          joint_to_ignore: The App.DocumentObject (a joint) to temporarily
+          suppress during the connectivity check.
+        
+          Returns:
+          A list of App.DocumentObject instances representing the downstream parts.
+```
+
+```text
+MODULE src/Mod/Assembly/App/BomGroup.pyi
+classes:
+  class BomGroup(DocumentObjectGroup)
+    doc:
+      This class is a group subclass for boms.
+```
+
+```text
+MODULE src/Mod/Assembly/App/BomObject.pyi
+classes:
+  class BomObject(Sheet)
+    doc:
+      This class is the BOM object of assemblies, it derives from Spreadsheet::Sheet.
+```
+
+```text
+MODULE src/Mod/Assembly/App/JointGroup.pyi
+classes:
+  class JointGroup(DocumentObjectGroup)
+    doc:
+      This class is a group subclass for joints.
+```
+
+```text
+MODULE src/Mod/Assembly/App/SimulationGroup.pyi
+classes:
+  class SimulationGroup(DocumentObjectGroup)
+    doc:
+      This class is a group subclass for joints.
+```
+
+```text
+MODULE src/Mod/Assembly/App/ViewGroup.pyi
+classes:
+  class ViewGroup(DocumentObjectGroup)
+    doc:
+      This class is a group subclass for joints.
+```
+
+```text
+MODULE src/Mod/Assembly/Gui/ViewProviderAssembly.pyi
+attributes:
+  - SoTransformDragger: TypeAlias
+classes:
+  class ViewProviderAssembly(ViewProvider)
+    doc:
+      This is the ViewProviderAssembly class
+    attributes:
+      - EnableMovement: bool
+        doc:
+          Enable moving the parts by clicking and dragging.
+      - MoveOnlyPreselected: bool
+        doc:
+          If enabled, only the preselected object will move.
+      - MoveInCommand: bool
+        doc:
+          If enabled, each move will be wrapped in a command.
+      - DraggerVisibility: bool
+        doc:
+          Show or hide the assembly dragger.
+      - DraggerPlacement: Any
+        doc:
+          Placement of the assembly dragger object.
+    methods:
+      - def isInEditMode(self) -> Any
+        doc:
+          Return true if the assembly object is currently in edit mode.
+      - def getDragger(self) -> SoTransformDragger
+        doc:
+          Return the assembly dragger coin object.
+      - def isolateComponents(self, components: List[DocumentObject] | Tuple[DocumentObject, ...], mode: int, /) -> None
+        doc:
+          Temporarily isolates a given set of components in the 3D view.
+          Other components are faded or hidden based on the specified mode.
+        
+          Args:
+          components (List[DocumentObject] | Tuple[DocumentObject, ...]):
+          A list or tuple of DocumentObjects to isolate.
+          mode (int): An integer specifying the isolation mode:
+          - 0: Transparent
+          - 1: Wireframe
+          - 2: Hidden
+      - def clearIsolate(self) -> None
+        doc:
+          Restores the visual state of all components, clearing any active isolation.
+```
+
+```text
+MODULE src/Mod/CAM/App/Area.pyi
+classes:
+  class Area(BaseClass)
+    doc:
+      FreeCAD-compatible runtime python wrapper of libarea
+    
+      Path.Area(key=value ...)
+    
+      The constructor accepts the same parameters as setParams(...) to configure the object
+      All arguments are optional.
+    attributes:
+      - Sections: Final[list]
+        doc:
+          List of sections in this area.
+      - Workplane: Any
+        doc:
+          The current workplane. If no plane is set, it is derived from the added shapes.
+      - Shapes: Final[list]
+        doc:
+          A list of tuple: [(shape,op), ...] containing the added shapes together with their operation code
+    methods:
+      - def add(self, **kwargs) -> Any
+      - def setPlane(self) -> None
+        doc:
+          Set the working plane.
+        
+          The supplied shape does not need to be planar. Area will try to find planar
+          sub-shape (face, wire or edge). If more than one planar sub-shape is found, it
+          will prefer the top plane parallel to XY0 plane. If no working plane are set,
+          Area will try to find a working plane from the added children shape using the
+          same algorithm
+      - def getShape(self, **kwargs) -> Any
+        doc:
+          Return the resulting shape
+        
+          * index (-1): the index of the section. -1 means all sections. No effect on planar shape.
+          * rebuild: clean the internal cache and rebuild
+      - def makeOffset(self, **kwargs) -> Any
+        doc:
+          Make an offset of the shape.
+      - def makePocket(self, **kwargs) -> Any
+        doc:
+          Generate pocket toolpath of the shape.
+      - def makeSections(self, **kwargs) -> Any
+        doc:
+          Make a list of area holding the sectioned children shapes on given heights.
+      - def getRestArea(self) -> Any
+        doc:
+          Rest machining: Gets the area left to be machined, assuming some of this area has already been cleared by previous tool paths.
+      - def toTopoShape(self) -> Any
+        doc:
+          Convert the Area object to a TopoShape.
+      - def setParams(self, **kwargs) -> Any
+        doc:
+          Set algorithm parameters.
+      - def setDefaultParams(self, **kwargs) -> Any
+        doc:
+          Static method to set the default parameters of all following Path.Area, plus the following additional parameters.
+      - def getDefaultParams(self) -> Any
+        doc:
+          Static method to return the current default parameters.
+      - def getParamsDesc(self, **kwargs) -> Any
+        doc:
+          Returns a list of supported parameters and their descriptions.
+      - def getParams(self) -> Any
+        doc:
+          Get current algorithm parameters as a dictionary.
+      - def abort(self, **kwargs) -> Any
+        doc:
+          Abort the current operation.
+```
+
+```text
+MODULE src/Mod/CAM/App/Command.pyi
+classes:
+  class Command(Persistence)
+    doc:
+      Command([name],[parameters],[annotations]): Represents a basic Gcode command
+      name (optional) is the name of the command, ex. G1
+      parameters (optional) is a dictionary containing string:number
+      pairs, or a placement, or a vector
+      annotations (optional) is a dictionary containing string:string or string:number pairs
+    attributes:
+      - Name: str
+        doc:
+          The name of the command
+      - Parameters: dict[str, float]
+        doc:
+          The parameters of the command
+      - Annotations: dict[str, str]
+        doc:
+          The annotations of the command
+      - Placement: Placement
+        doc:
+          The coordinates of the endpoint of the command
+    methods:
+      @constmethod
+      - def toGCode(self) -> str
+        doc:
+          returns a GCode representation of the command
+      - def setFromGCode(self, gcode: str, /) -> None
+        doc:
+          sets the path from the contents of the given GCode string
+      - def transform(self, placement: Placement, /) -> Command
+        doc:
+          returns a copy of this command transformed by the given placement
+      - def addAnnotations(self, annotations, /) -> 'Command'
+        doc:
+          addAnnotations(annotations): adds annotations from dictionary or string and returns self for chaining
+```
+
+```text
+MODULE src/Mod/CAM/App/FeatureArea.pyi
+classes:
+  class FeatureArea(DocumentObject)
+    doc:
+      This class handles Path Area features
+    attributes:
+      - WorkPlane: Any
+        doc:
+          The current workplane. If no plane is set, it is derived from the added shapes.
+    methods:
+      - def getArea(self) -> Any
+        doc:
+          Return a copy of the encapsulated Python Area object.
+      - def setParams(self, **kwargs) -> Any
+        doc:
+          Convenient function to configure this feature.
+        
+          Call with keywords: setParams(key=value, ...)
+        
+          Same usage as Path.Area.setParams(). This function stores the parameters in the properties.
+```
+
+```text
+MODULE src/Mod/CAM/App/FeaturePathCompound.pyi
+classes:
+  class FeaturePathCompound(DocumentObject)
+    doc:
+      This class handles Path Compound features
+    methods:
+      - def addObject(self) -> Any
+        doc:
+          Add an object to the group
+      - def removeObject(self) -> Any
+        doc:
+          Remove an object from the group
+```
+
+```text
+MODULE src/Mod/CAM/App/Path.pyi
+classes:
+  class Path(Persistence)
+    doc:
+      Path([commands]): Represents a basic Gcode path
+      commands (optional) is a list of Path commands
+    attributes:
+      - Length: Final[float]
+        doc:
+          the total length of this path in mm
+      - Size: Final[int]
+        doc:
+          the number of commands in this path
+      - Commands: list
+        doc:
+          the list of commands of this path
+      - Center: Any
+        doc:
+          the center position for all rotational parameters
+      - BoundBox: Final[Any]
+        doc:
+          the extent of this path
+    methods:
+      @overload
+      - def addCommands(self, command: Command, /) -> Path
+      @overload
+      - def addCommands(self, commands: list[Command], /) -> Path
+      - def addCommands(self, arg: Union[Command, list[Command]], /) -> Path
+        doc:
+          adds a command or a list of commands at the end of the path
+      - def insertCommand(self, command: Command, pos: int=-1, /) -> Path
+        doc:
+          adds a command at the given position or at the end of the path
+      - def deleteCommand(self, pos: int=-1, /) -> Path
+        doc:
+          deletes the command found at the given position or from the end of the path
+      - def setFromGCode(self, gcode: str, /) -> None
+        doc:
+          sets the contents of the path from a gcode string
+      - def getClearedArea(self) -> Any
+        doc:
+          Gets the area cleared when a tool of the specified diameter follows the gcode represented in the path, ignoring cleared space above zmax and path segments that don't affect space within the x/y space of bbox.
+      @constmethod
+      - def toGCode(self) -> str
+        doc:
+          returns a gcode string representing the path
+      @constmethod
+      - def copy(self) -> Path
+        doc:
+          returns a copy of this path
+      @constmethod
+      - def getCycleTime(self, h_feed: float, v_feed: float, h_rapid: float, v_rapid: float, /) -> float
+        doc:
+          return the cycle time estimation for this path in s
+```
+
+```text
+MODULE src/Mod/CAM/App/Voronoi.pyi
+classes:
+  class Voronoi(BaseClass)
+    doc:
+      Voronoi([segments]): Create voronoi for given collection of line segments
+    attributes:
+      - Cells: Final[list]
+        doc:
+          List of all cells of the voronoi diagram
+      - Edges: Final[list]
+        doc:
+          List of all edges of the voronoi diagram
+      - Vertices: Final[list]
+        doc:
+          List of all vertices of the voronoi diagram
+    methods:
+      @constmethod
+      - def numCells(self) -> Any
+        doc:
+          Return number of cells
+      @constmethod
+      - def numEdges(self) -> Any
+        doc:
+          Return number of edges
+      @constmethod
+      - def numVertices(self) -> Any
+        doc:
+          Return number of vertices
+      - def addPoint(self, point: Vector, /) -> None
+        doc:
+          add given point to input collection
+      - def addSegment(self, point1: Vector, point2: Vector, /) -> Any
+        doc:
+          add given segment to input collection
+      - def construct(self) -> Any
+        doc:
+          constructs the voronoi diagram from the input collections
+      - def colorExterior(self) -> Any
+        doc:
+          assign given color to all exterior edges and vertices
+      - def colorTwins(self) -> Any
+        doc:
+          assign given color to all twins of edges (which one is considered a twin is arbitrary)
+      - def colorColinear(self) -> Any
+        doc:
+          assign given color to all edges sourced by two segments almost in line with each other (optional angle in degrees)
+      - def resetColor(self) -> Any
+        doc:
+          assign color 0 to all elements with the given color
+      @constmethod
+      - def getPoints(self) -> Any
+        doc:
+          Get list of all input points.
+      @constmethod
+      - def numPoints(self) -> Any
+        doc:
+          Return number of input points
+      @constmethod
+      - def getSegments(self) -> Any
+        doc:
+          Get list of all input segments.
+      @constmethod
+      - def numSegments(self) -> Any
+        doc:
+          Return number of input segments
+```
+
+```text
+MODULE src/Mod/CAM/App/VoronoiCell.pyi
+classes:
+  class VoronoiCell(BaseClass)
+    doc:
+      Cell of a Voronoi diagram
+    attributes:
+      - Index: Final[int]
+        doc:
+          Internal id of the element.
+      - Color: int
+        doc:
+          Assigned color of the receiver.
+      - SourceIndex: Final[int]
+        doc:
+          Returns the index of the cell's source
+      - SourceCategory: Final[int]
+        doc:
+          Returns the cell's category as an integer
+      - SourceCategoryName: Final[str]
+        doc:
+          Returns the cell's category as a string
+      - IncidentEdge: Final[Any]
+        doc:
+          Incident edge of the cell - if exists
+    methods:
+      @constmethod
+      - def containsPoint(self) -> Any
+        doc:
+          Returns true if the cell contains a point site
+      @constmethod
+      - def containsSegment(self) -> Any
+        doc:
+          Returns true if the cell contains a segment site
+      @constmethod
+      - def isDegenerate(self) -> Any
+        doc:
+          Returns true if the cell doesn't have an incident edge
+      @constmethod
+      - def getSource(self) -> Any
+        doc:
+          Returns the Source for the cell
+```
+
+```text
+MODULE src/Mod/CAM/App/VoronoiEdge.pyi
+classes:
+  class VoronoiEdge(BaseClass)
+    doc:
+      Edge of a Voronoi diagram
+    attributes:
+      - Index: Final[int]
+        doc:
+          Internal id of the element.
+      - Color: int
+        doc:
+          Assigned color of the receiver.
+      - Cell: Final[Any]
+        doc:
+          cell the edge belongs to
+      - Vertices: Final[list]
+        doc:
+          Begin and End voronoi vertex
+      - Next: Final[Any]
+        doc:
+          CCW next edge within voronoi cell
+      - Prev: Final[Any]
+        doc:
+          CCW previous edge within voronoi cell
+      - RotNext: Final[Any]
+        doc:
+          Rotated CCW next edge within voronoi cell
+      - RotPrev: Final[Any]
+        doc:
+          Rotated CCW previous edge within voronoi cell
+      - Twin: Final[Any]
+        doc:
+          Twin edge
+    methods:
+      @constmethod
+      - def isFinite(self) -> Any
+        doc:
+          Returns true if both vertices are finite
+      @constmethod
+      - def isInfinite(self) -> Any
+        doc:
+          Returns true if the end vertex is infinite
+      @constmethod
+      - def isLinear(self) -> Any
+        doc:
+          Returns true if edge is straight
+      @constmethod
+      - def isCurved(self) -> Any
+        doc:
+          Returns true if edge is curved
+      @constmethod
+      - def isPrimary(self) -> Any
+        doc:
+          Returns false if edge goes through endpoint of the segment site
+      @constmethod
+      - def isSecondary(self) -> Any
+        doc:
+          Returns true if edge goes through endpoint of the segment site
+      @constmethod
+      - def isBorderline(self) -> Any
+        doc:
+          Returns true if the point is on the segment
+      @constmethod
+      - def toShape(self) -> Any
+        doc:
+          Returns a shape for the edge
+      @constmethod
+      - def getDistances(self) -> Any
+        doc:
+          Returns the distance of the vertices to the input source
+      @constmethod
+      - def getSegmentAngle(self) -> Any
+        doc:
+          Returns the angle (in degree) of the segments if the edge was formed by two segments
+```
+
+```text
+MODULE src/Mod/CAM/App/VoronoiVertex.pyi
+classes:
+  class VoronoiVertex(BaseClass)
+    doc:
+      Vertex of a Voronoi diagram
+    attributes:
+      - Index: Final[int]
+        doc:
+          Internal id of the element.
+      - Color: int
+        doc:
+          Assigned color of the receiver.
+      - X: Final[float]
+        doc:
+          X position
+      - Y: Final[float]
+        doc:
+          Y position
+      - IncidentEdge: Final[Any]
+        doc:
+          Y position
+    methods:
+      @constmethod
+      - def toPoint(self) -> Any
+        doc:
+          Returns a Vector - or None if not possible
+```
+
+```text
+MODULE src/Mod/CAM/PathSimulator/App/PathSim.pyi
+classes:
+  class PathSim(BaseClass)
+    doc:
+      FreeCAD-compatible runtime python wrapper of PathSimulator
+    
+      PathSimulator.PathSim():
+    
+      Create a path simulator object
+    attributes:
+      - Tool: Final[Any]
+        doc:
+          Return current simulation tool.
+    methods:
+      - def BeginSimulation(self, stock: TopoShape, resolution: float) -> None
+        doc:
+          Start a simulation process on a box shape stock with given resolution
+      - def SetToolShape(self, tool: TopoShape, resolution: float, /) -> None
+        doc:
+          Set the shape of the tool to be used for simulation
+      - def GetResultMesh(self) -> tuple[Mesh, Mesh]
+        doc:
+          Return the current mesh result of the simulation.
+      - def ApplyCommand(self, placement: Placement, command: Command) -> Placement
+        doc:
+          Apply a single path command on the stock starting from placement.
+```
+
+```text
+MODULE src/Mod/CAM/PathSimulator/AppGL/CAMSim.pyi
+classes:
+  class CAMSim(BaseClass)
+    doc:
+      FreeCAD-compatible runtime python wrapper of CAMSimulator
+    
+      CAMSimulator.CAMSim():
+    
+      Create a path simulator object
+    methods:
+      - def BeginSimulation(self, stock: TopoShape, resolution: float) -> None
+        doc:
+          Start a simulation process on a box shape stock with given resolution
+      - def ResetSimulation(self, document: Document, /) -> None
+        doc:
+          Clear the simulation and all gcode commands
+      - def AddTool(self, shape: TopoShape, toolnumber: int, diameter: float, resolution: float) -> Any
+        doc:
+          Set the shape of the tool to be used for simulation
+      - def SetBaseShape(self, shape: TopoShape, resolution: float) -> None
+        doc:
+          Set the shape of the base object of the job
+      - def AddCommand(self, command: Command, /) -> Any
+        doc:
+          Add a path command to the simulation.
+```
+
+```text
+MODULE src/Mod/Fem/App/FemMesh.pyi
+classes:
+  class FemMesh(ComplexGeoData)
+    doc:
+      FemMesh class
+    attributes:
+      - Nodes: Final[dict]
+        doc:
+          Dictionary of Nodes by ID (int ID:Vector())
+      - NodeCount: Final[int]
+        doc:
+          Number of nodes in the Mesh.
+      - Edges: Final[tuple]
+        doc:
+          Tuple of edge IDs
+      - EdgesOnly: Final[tuple]
+        doc:
+          Tuple of edge IDs which does not belong to any face (and thus not belong to any volume too)
+      - EdgeCount: Final[int]
+        doc:
+          Number of edges in the Mesh.
+      - Faces: Final[tuple]
+        doc:
+          Tuple of face IDs
+      - FacesOnly: Final[tuple]
+        doc:
+          Tuple of face IDs which does not belong to any volume
+      - FaceCount: Final[int]
+        doc:
+          Number of Faces in the Mesh.
+      - TriangleCount: Final[int]
+        doc:
+          Number of Triangles in the Mesh.
+      - QuadrangleCount: Final[int]
+        doc:
+          Number of Quadrangles in the Mesh.
+      - PolygonCount: Final[int]
+        doc:
+          Number of Quadrangles in the Mesh.
+      - Volumes: Final[tuple]
+        doc:
+          Tuple of volume IDs
+      - VolumeCount: Final[int]
+        doc:
+          Number of Volumes in the Mesh.
+      - TetraCount: Final[int]
+        doc:
+          Number of Tetras in the Mesh.
+      - HexaCount: Final[int]
+        doc:
+          Number of Hexas in the Mesh.
+      - PyramidCount: Final[int]
+        doc:
+          Number of Pyramids in the Mesh.
+      - PrismCount: Final[int]
+        doc:
+          Number of Prisms in the Mesh.
+      - PolyhedronCount: Final[int]
+        doc:
+          Number of Polyhedrons in the Mesh.
+      - SubMeshCount: Final[int]
+        doc:
+          Number of SubMeshs in the Mesh.
+      - GroupCount: Final[int]
+        doc:
+          Number of Groups in the Mesh.
+      - Groups: Final[tuple]
+        doc:
+          Tuple of Group IDs.
+      - Volume: Final[Any]
+        doc:
+          Volume of the mesh.
+    methods:
+      - def setShape(self, shape: TopoShape, /) -> None
+        doc:
+          Set the Part shape to mesh
+      - def compute(self) -> None
+        doc:
+          Update the internal mesh structure
+      - def addHypothesis(self, hypothesis: object, shape: TopoShape, /) -> None
+        doc:
+          Add hypothesis
+      - def setStandardHypotheses(self) -> None
+        doc:
+          Set some standard hypotheses for the whole shape
+      - def addNode(self, x: float, y: float, z: float, elem_id: int | None=None, /) -> int
+        doc:
+          Add a node by setting (x,y,z).
+      @overload
+      - def addEdge(self, n1: int, n2: int, /) -> int
+      @overload
+      - def addEdge(self, nodes: list[int], elem_id: int | None=None, /) -> int
+      - def addEdge(self, *args) -> int
+        doc:
+          Add an edge by setting two node indices.
+      - def addEdgeList(self, nodes: list[int], np: list[int], /) -> list[int]
+        doc:
+          Add list of edges by list of node indices and list of nodes per edge.
+      @overload
+      - def addFace(self, n1: int, n2: int, n3: int, /) -> int
+      @overload
+      - def addFace(self, nodes: list[int], elem_id: int | None=None, /) -> int
+      - def addFace(self) -> Any
+        doc:
+          Add a face by setting three node indices.
+      - def addFaceList(self, nodes: list[int], np: list[int], /) -> list[int]
+        doc:
+          Add list of faces by list of node indices and list of nodes per face.
+      - def addQuad(self, n1: int, n2: int, n3: int, n4: int, /) -> int
+        doc:
+          Add a quad by setting four node indices.
+      @overload
+      - def addVolume(self, n1: int, n2: int, n3: int, n4: int, /) -> int
+      @overload
+      - def addVolume(self, nodes: list[int], elem_id: int | None=None, /) -> int
+      - def addVolume(self, *args) -> int
+        doc:
+          Add a volume by setting an arbitrary number of node indices.
+      - def addVolumeList(self, nodes: list[int], np: list[int], /) -> list[int]
+        doc:
+          Add list of volumes by list of node indices and list of nodes per volume.
+      - def read(self, file_name: str, vtk_cell_group_array: str) -> None
+        doc:
+          Read in a various FEM mesh file formats.
+        
+          Supported formats: DAT, INP, MED, STL, UNV, VTK, Z88
+        
+          vtk_cell_group_array: If provided uses the given cell group array to create mesh groups.
+      @constmethod
+      - def write(self, file_name: str, highest: bool, vtk_cell_group_array: str, vtk_group_id_map: dict) -> None
+        doc:
+          Write out various FEM mesh file formats.
+        
+          Supported formats: BDF, DAT, INP, MED, STL, UNV, VTK, Z88
+        
+          highest: Export highest mesh elements only when true (default), all mesh elements if false
+        
+          vtk_cell_group_array: When writing a VTK file the cell groups will be stored in a array with this name.
+          By default it is a string array with the group name written for each group element.
+          vtk_group_id_map:     When writing VTK with groups, the groupname can be mapped to a integer ID under
+          which it will be stored (lessmemory usage then string). When reloading the group
+          name is equal to the int ID as string.
+        
+          Note on VTK group saving: The following limitations apply
+          1. Only element/cell groups are supported, no node groups and no mixed groups
+          2. Elements can only be in a single group, groups can not overlap
+          3. Element IDs in the mesh need to be continuous and start with ID 1
+      @constmethod
+      - def writeABAQUS(self, fileName: str, elemParam: int, groupParam: bool, volVariant: str='standard', faceVariant: str='shell', edgeVariant: str='beam') -> None
+        doc:
+          Write out as ABAQUS inp.
+        
+          elemParam:
+          0: All elements
+          1: Highest elements only
+          2: FEM elements only (only edges not belonging to faces and faces not belonging to volumes)
+        
+          groupParam:
+          True: Write group data
+          False: Do not write group data
+        
+          volVariant: Volume elements
+          "standard": Tetra4 -> C3D4, Penta6 -> C3D6, Hexa8 -> C3D8, Tetra10 -> C3D10, Penta15 -> C3D15, Hexa20 -> C3D20
+          "reduced": Hexa8 -> C3D8R, Hexa20 -> C3D20R
+          "incompatible": Hexa8 -> C3D8I
+          "modified": Tetra10 -> C3D10T
+          "fluid": Tetra4 -> F3D4, Penta6 -> F3D6, Hexa8  -> F3D8
+        
+          faceVariant: Face elements
+          "shell": Tria3 -> S3, Quad4 -> S4, Tria6 -> S6, Quad8 -> S8
+          "shell reduced": Tria3 -> S3, Quad4 -> S4R, Tria6 -> S6, Quad8 -> S8R
+          "membrane": Tria3 -> M3D3, Quad4 -> M3D4, Tria6 -> M3D6, Quad8 -> M3D8
+          "membrane reduced": Tria3 -> M3D3, Quad4 -> M3D4R, Tria6 -> M3D6, Quad8 -> M3D8R
+          "stress": Tria3 -> CPS3, Quad4 -> CPS4, Tria6 -> CPS6, Quad8 -> CPS8
+          "stress reduced": Tria3 -> CPS3, Quad4 -> CPS4R, Tria6 -> CPS6, Quad8 -> CPS8R
+          "strain": Tria3 -> CPE3, Quad4 -> CPE4, Tria6 -> CPE6, Quad8 -> CPE8
+          "strain reduced": Tria3 -> CPE3, Quad4 -> CPE4R, Tria6 -> CPE6, Quad8 -> CPE8R
+          "axisymmetric": Tria3 -> CAX3, Quad4 -> CAX4, Tria6 -> CAX6, Quad8 -> CAX8
+          "axisymmetric reduced": Tria3 -> CAX3, Quad4 -> CAX4R, Tria6 -> CAX6, Quad8 -> CAX8R
+        
+          edgeVariant: Edge elements
+          "beam": Seg2 -> B31, Seg3 -> B32
+          "beam reduced": Seg2 -> B31R, Seg3 -> B32R
+          "truss": Seg2 -> T3D2, eg3 -> T3D3
+          "network": Seg3 -> D
+        
+          Elements are selected according to CalculiX availability.
+          For example if volume variant "modified" is selected, Tetra10 mesh
+          elements are assigned to C3D10T and remain elements uses "standard".
+          Axisymmetric, plane strain and plane stress elements expect nodes in the plane z=0.
+      - def setTransform(self, placement: Placement, /) -> None
+        doc:
+          Use a Placement object to perform a translation or rotation
+      @constmethod
+      - def copy(self) -> FemMesh
+        doc:
+          Make a copy of this FEM mesh.
+      @constmethod
+      - def getFacesByFace(self, face: TopoShapeFace, /) -> list[int]
+        doc:
+          Return a list of face IDs which belong to a TopoFace
+      @constmethod
+      - def getEdgesByEdge(self, edge: TopoShapeEdge, /) -> list[int]
+        doc:
+          Return a list of edge IDs which belong to a TopoEdge
+      @constmethod
+      - def getVolumesByFace(self, face: TopoShapeFace, /) -> list[tuple[int, int]]
+        doc:
+          Return a list of tuples of volume IDs and face IDs which belong to a TopoFace
+      @constmethod
+      - def getccxVolumesByFace(self, face: TopoShapeFace, /) -> list[tuple[int, int]]
+        doc:
+          Return a list of tuples of volume IDs and ccx face numbers which belong to a TopoFace
+      @constmethod
+      - def getNodeById(self, node_id: int, /) -> Vector
+        doc:
+          Get the node position vector by a Node-ID
+      @constmethod
+      - def getNodesBySolid(self, shape: TopoShapeSolid, /) -> list[int]
+        doc:
+          Return a list of node IDs which belong to a TopoSolid
+      @constmethod
+      - def getNodesByFace(self, face: TopoShapeFace, /) -> list[int]
+        doc:
+          Return a list of node IDs which belong to a TopoFace
+      @constmethod
+      - def getNodesByEdge(self, edge: TopoShapeEdge, /) -> list[int]
+        doc:
+          Return a list of node IDs which belong to a TopoEdge
+      @constmethod
+      - def getNodesByVertex(self, vertex: TopoShapeVertex, /) -> list[int]
+        doc:
+          Return a list of node IDs which belong to a TopoVertex
+      @constmethod
+      - def getElementNodes(self, elem_id: int, /) -> tuple[int, ...]
+        doc:
+          Return a tuple of node IDs to a given element ID
+      @constmethod
+      - def getNodeElements(self, elem_id: int, elem_type: str='All', /) -> tuple[int, ...]
+        doc:
+          Return a tuple of specific element IDs associated to a given node ID
+      @constmethod
+      - def getGroupName(self, elem_id: int, /) -> str
+        doc:
+          Return a string of group name to a given group ID
+      @constmethod
+      - def getGroupElementType(self, elem_id: int, /) -> str
+        doc:
+          Return a string of group element type to a given group ID
+      @constmethod
+      - def getGroupElements(self, elem_id: int, /) -> tuple[int, ...]
+        doc:
+          Return a tuple of ElementIDs to a given group ID
+      @constmethod
+      - def addGroup(self, name: str, group_type: str, group_id: int=-1, /) -> None
+        doc:
+          Add a group to mesh with specific name and type
+        
+          name: string
+          group_type: "All", "Node", "Edge", "Face", "Volume", "0DElement", "Ball"
+          group_id: int
+          Optional group_id is used to force specific id for group, but does
+          not work, yet.
+      @constmethod
+      - def addGroupElements(self, group_id: int, elements: list[int], /) -> None
+        doc:
+          Add a tuple of ElementIDs to a given group ID
+        
+          group_id: int
+          elements: list of int
+          Notice that the elements have to be in the mesh.
+      @constmethod
+      - def removeGroup(self, group_id: int, /) -> bool
+        doc:
+          Remove a group with a given group ID
+          removeGroup(groupid)
+          groupid: int
+          Returns boolean.
+      @constmethod
+      - def renameGroup(self) -> Any
+        doc:
+          Rename a group with a given group ID
+          renameGroup(id, name)
+          groupid: int
+          name: string
+      @constmethod
+      - def getElementType(self, elem_id: int, /) -> str
+        doc:
+          Return the element type of a given ID
+      @constmethod
+      - def getIdByElementType(self, elem_type: str, /) -> tuple[int, ...]
+        doc:
+          Return a tuple of IDs to a given element type
+```
+
+```text
+MODULE src/Mod/Fem/App/FemPostBranchFilter.pyi
+classes:
+  class FemPostBranchFilter(FemPostFilter)
+    doc:
+      The FemPostBranch class.
+    methods:
+      - def getFilter(self) -> Any
+        doc:
+          Returns all filters, that this pipeline uses (non recursive, result does not contain branch child filters)
+      - def recomputeChildren(self) -> Any
+        doc:
+          Recomputes all children of the pipeline
+      - def getLastPostObject(self) -> Any
+        doc:
+          Get the last post-processing object
+      - def holdsPostObject(self) -> Any
+        doc:
+          Check if this pipeline holds a given post-processing object
+```
+
+```text
+MODULE src/Mod/Fem/App/FemPostFilter.pyi
+attributes:
+  - vtkAlgorithm: TypeAlias
+classes:
+  class FemPostFilter(FemPostObject)
+    doc:
+      The FemPostFilter class.
+    methods:
+      - def addFilterPipeline(self, name: str, source: vtkAlgorithm, target: vtkAlgorithm, /) -> None
+        doc:
+          Registers a new vtk filter pipeline for data processing. Arguments are (name, source algorithm, target algorithm).
+      - def setActiveFilterPipeline(self, name: str, /) -> None
+        doc:
+          Sets the filter pipeline that shall be used for data processing. Argument is the name of the filter pipeline to activate.
+      - def getParentPostGroup(self) -> object
+        doc:
+          Returns the postprocessing group the filter is in (e.g. a pipeline or branch object). None is returned if not in any.
+      - def getInputData(self) -> object
+        doc:
+          Returns the dataset available at the filter's input.
+          Note: Can lead to a full recompute of the whole pipeline, hence best to call this only in "execute", where the user expects long calculation cycles.
+      - def getInputVectorFields(self) -> list[str]
+        doc:
+          Returns the names of all vector fields available on this filter's input.
+          Note: Can lead to a full recompute of the whole pipeline, hence best to call this only in "execute", where the user expects long calculation cycles.
+      - def getInputScalarFields(self) -> list[str]
+        doc:
+          Returns the names of all scalar fields available on this filter's input.
+          Note: Can lead to a full recompute of the whole pipeline, hence best to call this only in "execute", where the user expects long calculation cycles.
+      - def getOutputAlgorithm(self) -> vtkAlgorithm
+        doc:
+          Returns the filters vtk algorithm currently used as output (the one generating the Data field). Note that the output algorithm may change depending on filter settings.
+```
+
+```text
+MODULE src/Mod/Fem/App/FemPostObject.pyi
+attributes:
+  - vtkDataSet: TypeAlias
+classes:
+  class FemPostObject(GeoFeature)
+    doc:
+      The FemPostObject class.
+    methods:
+      - def writeVTK(self, file_name: str, /) -> None
+        doc:
+          Write data object to VTK file.
+        
+          filename: str
+          File extension is automatically detected from data type.
+      - def getDataSet(self) -> vtkDataSet
+        doc:
+          Returns the current output dataset.
+          For normal filters this is equal to the objects Data property output.
+          However, a pipelines Data property could store multiple frames, and hence
+          Data can be of type vtkCompositeData, which is not a vtkDataset.
+        
+          To simplify implementations this function always returns a vtkDataSet,
+          and for a pipeline it will be the dataset of the currently selected frame.
+        
+          Note that the returned value could be None, if no data is set at all.
+```
+
+```text
+MODULE src/Mod/Fem/App/FemPostPipeline.pyi
+attributes:
+  - vtkAlgorithm: TypeAlias
+classes:
+  class FemPostPipeline(FemPostObject)
+    doc:
+      The FemPostPipeline class.
+    methods:
+      @overload
+      - def read(self, file_name: str, /) -> None
+      @overload
+      - def read(self, files: list[str] | tuple[str], values: list[int] | tuple[int], unit: Unit, frame_type: str, /) -> None
+      - def read(self, *args) -> None
+        doc:
+          Reads in a single vtk file or creates a multiframe result by reading in multiple result files.
+        
+          If multiframe is wanted, 4 argumenhts are needed:
+          1. List of result files each being one frame,
+          2. List of values valid for each frame (e.g. [s] if time data),
+          3. the unit of the value as FreeCAD-compatible runtime.Units.Unit,
+          4. the Description of the frame type
+      - def scale(self, scale: float, /) -> None
+        doc:
+          scale the points of a loaded vtk file
+      @overload
+      - def load(self, obj: DocumentObject, /) -> None
+      @overload
+      - def load(self, result: list[DocumentObject] | tuple[DocumentObject], values: list[float] | tuple[float], unit: Unit, frame_type: str, /) -> None
+      - def load(self, *args) -> Any
+        doc:
+          Load a single result object or create a multiframe result by loading multiple result frames.
+        
+          If multiframe is wanted, 4 argumenhts are needed:
+          1. List of result objects each being one frame,
+          2. List of values valid for each frame (e.g. [s] if time data),
+          3. the unit of the value as FreeCAD-compatible runtime.Units.Unit,
+          4. the Description of the frame type
+      - def getFilter(self) -> list[object]
+        doc:
+          Returns all filters, that this pipeline uses (non recursive, result does not contain branch child filters)
+      - def recomputeChildren(self) -> None
+        doc:
+          Recomputes all children of the pipeline
+      - def getLastPostObject(self) -> DocumentObject | None
+        doc:
+          Get the last post-processing object
+      - def holdsPostObject(self, obj: DocumentObject, /) -> bool
+        doc:
+          Check if this pipeline holds a given post-processing object
+      - def renameArrays(self, names: dict[str, str], /) -> None
+        doc:
+          Change name of data arrays
+      - def addArrayFromFunction(self, functions: dict[str, str], /) -> None
+        doc:
+          Add new arrays as functions of the current fields.
+          The arrays are defined as "func_name": "func" key-value pairs.
+          Field names behave similarly to those in the calculator filter.
+      - def getOutputAlgorithm(self) -> vtkAlgorithm
+        doc:
+          Returns the pipeline vtk algorithm, which generates the data passed to the pipelines filters.
+        
+          Note that the output algorithm may change depending on pipeline settings.
+      - def setTimeInfo(self, frame_type: str, unit: Unit, /) -> None
+        doc:
+          Set pipeline frame information.
+```
+
+```text
+MODULE src/Mod/Fem/Gui/ViewProviderFemConstraint.pyi
+classes:
+  class ViewProviderFemConstraint(ViewProviderGeometryObject)
+    doc:
+      This is the ViewProviderFemConstraint class
+    attributes:
+      - SymbolNode: Final[Any]
+        doc:
+          A pivy SoSeparator with the nodes of the constraint symbols
+      - ExtraSymbolNode: Final[Any]
+        doc:
+          A pivy SoSeparator with the nodes of the constraint extra symbols
+      - RotateSymbol: bool
+        doc:
+          Apply rotation on copies of the constraint symbol
+    methods:
+      - def loadSymbol(self, file_name: str, /) -> Any
+        doc:
+          Load constraint symbol from Open Inventor file.
+          The file structure should be as follows:
+          A separator containing a separator with the symbol used in
+          multiple copies at points on the surface and an optional
+          separator with a symbol excluded from multiple copies.
+        
+          file_name : str
+          Open Inventor file.
+```
+
+```text
+MODULE src/Mod/Fem/Gui/ViewProviderFemMesh.pyi
+classes:
+  class ViewProviderFemMesh(ViewProviderGeometryObject)
+    doc:
+      ViewProviderFemMesh class
+    attributes:
+      - NodeColor: dict
+        doc:
+          Postprocessing color of the nodes. The faces between the nodes get interpolated.
+      - ElementColor: dict
+        doc:
+          Postprocessing color of the elements. All faces of the element get the same color.
+      - NodeDisplacement: dict
+        doc:
+          Postprocessing color of the nodes. The faces between the nodes get interpolated.
+      - HighlightedNodes: list
+        doc:
+          List of nodes which get highlighted.
+      - VisibleElementFaces: Final[list]
+        doc:
+          List of elements and faces which are actually shown. These are all surface faces of the mesh.
+    methods:
+      - def applyDisplacement(self) -> Any
+      - def resetNodeColor(self) -> Any
+        doc:
+          Reset color set by method setNodeColorByScalars.
+      - def resetNodeDisplacement(self) -> Any
+        doc:
+          Reset displacements set by method setNodeDisplacementByVectors.
+      - def resetHighlightedNodes(self) -> Any
+        doc:
+          Reset highlighted nodes.
+      - def setNodeColorByScalars(self) -> Any
+        doc:
+          Sets mesh node colors using element list and value list.
+      - def setNodeDisplacementByVectors(self) -> Any
+```
+
+```text
+MODULE src/Mod/Fem/Gui/ViewProviderFemPostFilter.pyi
+classes:
+  class ViewProviderFemPostFilter(ViewProviderDocumentObject)
+    doc:
+      ViewProviderFemPostPipeline class
+    methods:
+      - def createDisplayTaskWidget(self) -> Any
+        doc:
+          Returns the display option task panel for a post processing edit task dialog.
+      - def createExtractionTaskWidget(self) -> Any
+        doc:
+          Returns the data extraction task panel for a post processing edit task dialog.
+```
+
+```text
+MODULE src/Mod/Fem/Gui/ViewProviderFemPostPipeline.pyi
+classes:
+  class ViewProviderFemPostPipeline(ViewProviderDocumentObject)
+    doc:
+      ViewProviderFemPostPipeline class
+    methods:
+      - def transformField(self) -> Any
+        doc:
+          Scales values of given result mesh field by given factor
+      - def updateColorBars(self) -> Any
+        doc:
+          Update coloring of pipeline and its childs
+```
+
+```text
+MODULE src/Mod/Fem/Gui/ViewProviderShapeExtension.pyi
+classes:
+  class ViewProviderShapeExtension(ViewProviderExtension)
+    doc:
+      Extension class which adds visualizations for FEM shape objects
+    methods:
+      - def createControlWidget(self) -> Any
+        doc:
+          Creates a QWidget which allows manipulation of the shape properties
+```
+
+```text
+MODULE src/Mod/Material/App/Array2D.pyi
+classes:
+  class Array2D(BaseClass)
+    doc:
+      2D Array of material properties.
+    attributes:
+      - Array: Final[List]
+        doc:
+          The 2 dimensional array.
+      - Dimensions: Final[int]
+        doc:
+          The number of dimensions in the array, in this case 2.
+      - Rows: int
+        doc:
+          The number of rows in the array.
+      - Columns: int
+        doc:
+          The number of columns in the array.
+    methods:
+      @constmethod
+      - def getRow(self, value: Any, /) -> Any
+        doc:
+          Get the row given the first column value
+      @constmethod
+      - def getValue(self, row: int, column: int, /) -> Any
+        doc:
+          Get the value at the given row and column
+      - def setValue(self, row: int, column: int, value: Any, /)
+        doc:
+          Set the value at the given row and column
+```
+
+```text
+MODULE src/Mod/Material/App/Array3D.pyi
+classes:
+  class Array3D(BaseClass)
+    doc:
+      3D Array of material properties.
+    attributes:
+      - Array: Final[List]
+        doc:
+          The 3 dimensional array.
+      - Dimensions: Final[int]
+        doc:
+          The number of dimensions in the array, in this case 3.
+      - Columns: int
+        doc:
+          The number of columns in the array.
+      - Depth: int
+        doc:
+          The depth of the array (3rd dimension).
+    methods:
+      @constmethod
+      - def getRows(self) -> int
+        doc:
+          Get the number of rows in the array at the specified depth.
+      @constmethod
+      - def getValue(self) -> Any
+        doc:
+          Get the value at the given row and column
+      @constmethod
+      - def getDepthValue(self) -> Any
+        doc:
+          Get the column value at the given depth
+      - def setDepthValue(self, value: Any, /)
+        doc:
+          Set the column value at the given depth
+      - def setValue(self, depth: int, row: int, column: int, value: Any, /)
+        doc:
+          Set the value at the given depth, row, and column
+      - def setRows(self, depth: int, value: int, /)
+        doc:
+          Set the number of rows at the given depth
+```
+
+```text
+MODULE src/Mod/Material/App/Material.pyi
+classes:
+  class Material(BaseClass)
+    doc:
+      Material descriptions.
+    attributes:
+      - LibraryName: Final[str]
+        doc:
+          Material library name.
+      - LibraryRoot: Final[str]
+        doc:
+          Material library path.
+      - LibraryIcon: Final[bytes]
+        doc:
+          Material icon.
+      - Name: str
+        doc:
+          Material name.
+      - Directory: str
+        doc:
+          Material directory relative to the library root.
+      - UUID: Final[str]
+        doc:
+          Unique material identifier. This is only valid after the material is saved.
+      - Description: str
+        doc:
+          Description of the material.
+      - URL: str
+        doc:
+          URL to a material reference.
+      - Reference: str
+        doc:
+          Reference for material data.
+      - Parent: str
+        doc:
+          Parent material UUID.
+      - AuthorAndLicense: Final[str]
+        doc:
+          deprecated -- Author and license information.
+      - Author: str
+        doc:
+          Author information.
+      - License: str
+        doc:
+          License information.
+      - PhysicalModels: Final[list]
+        doc:
+          List of implemented models.
+      - AppearanceModels: Final[list]
+        doc:
+          List of implemented models.
+      - Tags: Final[list]
+        doc:
+          List of searchable tags.
+      - Properties: Final[dict]
+        doc:
+          deprecated -- Dictionary of all material properties.
+      - PhysicalProperties: Final[dict]
+        doc:
+          deprecated -- Dictionary of material physical properties.
+      - AppearanceProperties: Final[dict]
+        doc:
+          deprecated -- Dictionary of material appearance properties.
+      - LegacyProperties: Final[dict]
+        doc:
+          deprecated -- Dictionary of material legacy properties.
+      - PropertyObjects: Final[dict]
+        doc:
+          Dictionary of MaterialProperty objects.
+    methods:
+      - def addPhysicalModel(self) -> None
+        doc:
+          Add the physical model with the given UUID
+      - def removePhysicalModel(self) -> None
+        doc:
+          Remove the physical model with the given UUID
+      - def hasPhysicalModel(self) -> bool
+        doc:
+          Check if the material implements the physical model with the given UUID
+      - def addAppearanceModel(self) -> None
+        doc:
+          Add the appearance model with the given UUID
+      - def removeAppearanceModel(self) -> None
+        doc:
+          Remove the appearance model with the given UUID
+      - def hasAppearanceModel(self) -> bool
+        doc:
+          Check if the material implements the appearance model with the given UUID
+      - def isPhysicalModelComplete(self) -> bool
+        doc:
+          Check if the material implements the physical model with the given UUID, and has values defined for each property
+      - def isAppearanceModelComplete(self) -> bool
+        doc:
+          Check if the material implements the appearance model with the given UUID, and has values defined for each property
+      - def hasPhysicalProperty(self) -> bool
+        doc:
+          Check if the material implements the physical property with the given name
+      - def hasAppearanceProperty(self) -> bool
+        doc:
+          Check if the material implements the appearance property with the given name
+      - def hasLegacyProperties(self) -> bool
+        doc:
+          Returns true of there are legacy properties
+      - def getPhysicalValue(self) -> str
+        doc:
+          Get the value associated with the property
+      - def setPhysicalValue(self) -> None
+        doc:
+          Set the value associated with the property
+      - def getAppearanceValue(self) -> str
+        doc:
+          Get the value associated with the property
+      - def setAppearanceValue(self) -> None
+        doc:
+          Set the value associated with the property
+      - def setValue(self) -> None
+        doc:
+          Set the value associated with the property
+      @no_args
+      - def keys(self) -> list
+        doc:
+          Property keys
+      @no_args
+      - def values(self) -> list
+        doc:
+          Property values
+```
+
+```text
+MODULE src/Mod/Material/App/MaterialFilter.pyi
+classes:
+  class MaterialFilter(BaseClass)
+    doc:
+      Material filters.
+    attributes:
+      - Name: str
+        doc:
+          Name of the filter used to select a filter in a list
+      - RequiredModels: List
+        doc:
+          Materials must include the specified models.
+      - RequiredCompleteModels: List
+        doc:
+          Materials must have complete versions of the specified models.
+```
+
+```text
+MODULE src/Mod/Material/App/MaterialFilterOptions.pyi
+classes:
+  class MaterialFilterOptions(BaseClass)
+    doc:
+      Material filtering options.
+    attributes:
+      - IncludeFavorites: bool
+        doc:
+          Include materials marked as favorite.
+      - IncludeRecent: bool
+        doc:
+          Include recently used materials.
+      - IncludeEmptyFolders: bool
+        doc:
+          Include empty folders.
+      - IncludeEmptyLibraries: bool
+        doc:
+          Include empty libraries.
+      - IncludeLegacy: bool
+        doc:
+          Include materials using the older legacy format.
+```
+
+```text
+MODULE src/Mod/Material/App/MaterialLibrary.pyi
+classes:
+  class MaterialLibrary(BaseClass)
+    doc:
+      Material library.
+    attributes:
+      - Name: str
+        doc:
+          Name of the library
+      - Icon: bytes
+        doc:
+          Icon as an array of bytes.
+      - Directory: str
+        doc:
+          Local directory where the library is located. For non-local libraries this will be empty
+      - ReadOnly: bool
+        doc:
+          True if the library is local.
+      - Local: bool
+        doc:
+          True if the library is local.
+```
+
+```text
+MODULE src/Mod/Material/App/MaterialManager.pyi
+classes:
+  class MaterialManager(BaseClass)
+    doc:
+      Material descriptions.
+    attributes:
+      - MaterialLibraries: Final[List]
+        doc:
+          List of Material libraries.
+      - Materials: Final[Dict]
+        doc:
+          List of Materials.
+    methods:
+      - def getMaterial(self) -> None
+        doc:
+          Get a material object by specifying its UUID
+      - def getMaterialByPath(self) -> None
+        doc:
+          Get a material object by specifying its path and library name
+      - def inheritMaterial(self) -> None
+        doc:
+          Create a new material object by specifying the UUID of its parent
+      - def materialsWithModel(self) -> None
+        doc:
+          Get a list of materials implementing the specified model
+      - def materialsWithModelComplete(self) -> None
+        doc:
+          Get a list of materials implementing the specified model, with values for all properties
+      - def save(self, **kwargs) -> None
+        doc:
+          Save the material in the specified library
+      - def filterMaterials(self, **kwargs) -> None
+        doc:
+          Returns a filtered material list
+      - def refresh(self) -> None
+        doc:
+          Refreshes the material tree. Use sparingly as this is an expensive operation.
+```
+
+```text
+MODULE src/Mod/Material/App/MaterialProperty.pyi
+classes:
+  class MaterialProperty(ModelProperty)
+    doc:
+      Material property descriptions.
+    attributes:
+      - Value: Final[object]
+        doc:
+          The value of the material property.
+      - Empty: Final[bool]
+        doc:
+          The property value is undefined.
+```
+
+```text
+MODULE src/Mod/Material/App/Model.pyi
+classes:
+  class Model(BaseClass)
+    doc:
+      Material model descriptions.
+    attributes:
+      - LibraryName: Final[str]
+        doc:
+          Model library name.
+      - LibraryRoot: Final[str]
+        doc:
+          Model library path.
+      - LibraryIcon: Final[bytes]
+        doc:
+          Model icon.
+      - Name: str
+        doc:
+          Model name.
+      - Type: str
+        doc:
+          Model type.
+      - Directory: str
+        doc:
+          Model directory.
+      - UUID: Final[str]
+        doc:
+          Unique model identifier.
+      - Description: str
+        doc:
+          Description of the model.
+      - URL: str
+        doc:
+          URL to a detailed description of the model.
+      - DOI: str
+        doc:
+          Digital Object Identifier (see https://doi.org/)
+      - Inherited: Final[List[str]]
+        doc:
+          List of inherited models identified by UUID.
+      - Properties: Final[Dict[str, str]]
+        doc:
+          Dictionary of model properties.
+    methods:
+      - def addInheritance(self) -> None
+        doc:
+          Add an inherited model.
+      - def addProperty(self) -> None
+        doc:
+          Add a model property.
+```
+
+```text
+MODULE src/Mod/Material/App/ModelManager.pyi
+classes:
+  class ModelManager(BaseClass)
+    doc:
+      Material model descriptions.
+    attributes:
+      - ModelLibraries: Final[List]
+        doc:
+          List of model libraries.
+      - LocalModelLibraries: Final[List]
+        doc:
+          List of local model libraries.
+      - Models: Final[Dict]
+        doc:
+          List of model libraries.
+    methods:
+      - def getModel(self) -> ...
+        doc:
+          Get a model object by specifying its UUID
+      - def getModelByPath(self) -> ...
+        doc:
+          Get a model object by specifying its path
+```
+
+```text
+MODULE src/Mod/Material/App/ModelProperty.pyi
+classes:
+  class ModelProperty(BaseClass)
+    doc:
+      Material property descriptions.
+    attributes:
+      - Name: str
+        doc:
+          Property name.
+      - DisplayName: str
+        doc:
+          Property display friendly name.
+      - Type: str
+        doc:
+          Property type.
+      - Units: str
+        doc:
+          Property units category.
+      - URL: str
+        doc:
+          URL to a detailed description of the property.
+      - Description: str
+        doc:
+          Property description.
+      - Columns: Final[list]
+        doc:
+          List of array columns.
+      - Inheritance: Final[str]
+        doc:
+          UUID of the model in which the property is defined.
+      - Inherited: Final[bool]
+        doc:
+          True if the property is inherited.
+    methods:
+      - def addColumn(self) -> None
+        doc:
+          Add a model property column.
+```
+
+```text
+MODULE src/Mod/Material/App/UUIDs.pyi
+classes:
+  class UUIDs(BaseClass)
+    doc:
+      Material model UUID identifiers.
+    attributes:
+      - Father: Final[str]
+        doc:
+          UUID for model System:Legacy/Father
+      - MaterialStandard: Final[str]
+        doc:
+          UUID for model System:Legacy/MaterialStandard
+      - ArrudaBoyce: Final[str]
+        doc:
+          UUID for model System:Mechanical/ArrudaBoyce
+      - Density: Final[str]
+        doc:
+          UUID for model System:Mechanical/Density
+      - Hardness: Final[str]
+        doc:
+          UUID for model System:Mechanical/Hardness
+      - IsotropicLinearElastic: Final[str]
+        doc:
+          UUID for model System:Mechanical/IsotropicLinearElastic
+      - LinearElastic: Final[str]
+        doc:
+          UUID for model System:Mechanical/LinearElastic
+      - Machinability: Final[str]
+        doc:
+          UUID for model System:Machining/Machinability
+      - MooneyRivlin: Final[str]
+        doc:
+          UUID for model System:Mechanical/MooneyRivlin
+      - NeoHooke: Final[str]
+        doc:
+          UUID for model System:Mechanical/NeoHooke
+      - OgdenN1: Final[str]
+        doc:
+          UUID for model System:Mechanical/OgdenN1
+      - OgdenN2: Final[str]
+        doc:
+          UUID for model System:Mechanical/OgdenN2
+      - OgdenN3: Final[str]
+        doc:
+          UUID for model System:Mechanical/OgdenN3
+      - OgdenYld2004p18: Final[str]
+        doc:
+          UUID for model System:Mechanical/OgdenYld2004p18
+      - OrthotropicLinearElastic: Final[str]
+        doc:
+          UUID for model System:Mechanical/OrthotropicLinearElastic
+      - PolynomialN1: Final[str]
+        doc:
+          UUID for model System:Mechanical/PolynomialN1
+      - PolynomialN2: Final[str]
+        doc:
+          UUID for model System:Mechanical/PolynomialN2
+      - PolynomialN3: Final[str]
+        doc:
+          UUID for model System:Mechanical/PolynomialN3
+      - ReducedPolynomialN1: Final[str]
+        doc:
+          UUID for model System:Mechanical/ReducedPolynomialN1
+      - ReducedPolynomialN2: Final[str]
+        doc:
+          UUID for model System:Mechanical/ReducedPolynomialN2
+      - ReducedPolynomialN3: Final[str]
+        doc:
+          UUID for model System:Mechanical/ReducedPolynomialN3
+      - Yeoh: Final[str]
+        doc:
+          UUID for model System:Mechanical/Yeoh
+      - Fluid: Final[str]
+        doc:
+          UUID for model System:Fluid/Fluid
+      - Thermal: Final[str]
+        doc:
+          UUID for model System:Thermal/Thermal
+      - Electromagnetic: Final[str]
+        doc:
+          UUID for model System:Electromagnetic/Electromagnetic
+      - Architectural: Final[str]
+        doc:
+          UUID for model System:Architectural/Architectural
+      - ArchitecturalRendering: Final[str]
+        doc:
+          UUID for model System:Architectural/ArchitecturalRendering
+      - Costs: Final[str]
+        doc:
+          UUID for model System:Costs/Costs
+      - BasicRendering: Final[str]
+        doc:
+          UUID for model System:Rendering/BasicRendering
+      - TextureRendering: Final[str]
+        doc:
+          UUID for model System:Rendering/TextureRendering
+      - AdvancedRendering: Final[str]
+        doc:
+          UUID for model System:Rendering/AdvancedRendering
+      - VectorRendering: Final[str]
+        doc:
+          UUID for model System:Rendering/VectorRendering
+      - RenderAppleseed: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderAppleseed
+      - RenderCarpaint: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderCarpaint
+      - RenderCycles: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderCycles
+      - RenderDiffuse: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderDiffuse
+      - RenderDisney: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderDisney
+      - RenderEmission: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderEmission
+      - RenderGlass: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderGlass
+      - RenderLuxcore: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderLuxcore
+      - RenderLuxrender: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderLuxrender
+      - RenderMixed: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderMixed
+      - RenderOspray: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderOspray
+      - RenderPbrt: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderPbrt
+      - RenderPovray: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderPovray
+      - RenderSubstancePBR: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderSubstancePBR
+      - RenderTexture: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderTexture
+      - RenderWB: Final[str]
+        doc:
+          UUID for model System:Rendering/RenderWB
+      - TestModel: Final[str]
+        doc:
+          UUID for model System:Test/Test Model
+```
+
+```text
+MODULE src/Mod/Material/Gui/MaterialTreeWidget.pyi
+classes:
+  class MaterialTreeWidget(BaseClass)
+    doc:
+      Material tree widget.
+    attributes:
+      - UUID: str
+        doc:
+          Material UUID.
+      - expanded: bool
+        doc:
+          Expand material tree.
+      - IncludeFavorites: bool
+        doc:
+          Include favorites in the material list.
+      - IncludeRecent: bool
+        doc:
+          Include recently used materials in the material list.
+      - IncludeEmptyFolders: bool
+        doc:
+          Include empty folders in the material list.
+      - IncludeEmptyLibraries: bool
+        doc:
+          Include empty libraries in the material list.
+      - IncludeLegacy: bool
+        doc:
+          Include legacy materials in the material list.
+    methods:
+      - def setFilter(self) -> None
+        doc:
+          Set the material filter or list of filters.
+      - def selectFilter(self) -> None
+        doc:
+          Set the current material filter.
+```
+
+```text
+MODULE src/Mod/Robot/App/Robot6Axis.pyi
+classes:
+  class Robot6Axis(Persistence)
+    doc:
+      Robot6Axis class
+    attributes:
+      - Axis1: float
+        doc:
+          Pose of Axis 1 in degrees
+      - Axis2: float
+        doc:
+          Pose of Axis 2 in degrees
+      - Axis3: float
+        doc:
+          Pose of Axis 3 in degrees
+      - Axis4: float
+        doc:
+          Pose of Axis 4 in degrees
+      - Axis5: float
+        doc:
+          Pose of Axis 5 in degrees
+      - Axis6: float
+        doc:
+          Pose of Axis 6 in degrees
+      - Tcp: Any
+        doc:
+          Tool center point frame. Where the tool of the robot is
+      - Base: Any
+        doc:
+          Actual Base system in respect to the robot world system
+    methods:
+      - def check(self) -> Any
+        doc:
+          Checks the shape and report errors in the shape structure.
+          This is a more detailed check as done in isValid().
+```
+
+```text
+MODULE src/Mod/Robot/App/RobotObject.pyi
+classes:
+  class RobotObject(DocumentObject)
+    doc:
+      Robot document object
+    methods:
+      - def getRobot(self) -> Any
+        doc:
+          Returns a copy of the robot. Be aware, the robot behaves the same
+          like the robot of the object but is a copy!
+```
+
+```text
+MODULE src/Mod/Robot/App/Trajectory.pyi
+classes:
+  class Trajectory(Persistence)
+    doc:
+      Trajectory class
+    attributes:
+      - Duration: Final[float]
+        doc:
+          duration of the trajectory
+      - Length: Final[float]
+        doc:
+          length of the trajectory
+      - Waypoints: list
+        doc:
+          waypoints of this trajectory
+    methods:
+      - def insertWaypoints(self) -> Any
+        doc:
+          adds one or a list of waypoint to the end of the trajectory
+      - def position(self) -> Any
+        doc:
+          returns a Frame to a given time in the trajectory
+      - def velocity(self) -> Any
+        doc:
+          returns the velocity to a given time in the trajectory
+      - def deleteLast(self) -> Any
+        doc:
+          deleteLast(n) - delete n waypoints at the end
+          deleteLast()  - delete the last waypoint
+```
+
+```text
+MODULE src/Mod/Robot/App/Waypoint.pyi
+classes:
+  class Waypoint(Persistence)
+    doc:
+      Waypoint class
+    attributes:
+      - Name: str
+        doc:
+          Name of the waypoint
+      - Type: str
+        doc:
+          Type of the waypoint[PTP|LIN|CIRC|WAIT]
+      - Pos: Any
+        doc:
+          End position (destination) of the waypoint
+      - Cont: bool
+        doc:
+          Control the continuity to the next waypoint in the trajectory
+      - Velocity: float
+        doc:
+          Control the velocity to the next waypoint in the trajectory
+          In Case of PTP 0-100% Axis speed
+          In Case of LIN m/s
+          In Case of WAIT s wait time
+      - Tool: int
+        doc:
+          Describe which tool frame to use for that point
+      - Base: int
+        doc:
+          Describe which Base frame to use for that point
+```
+
+```text
+MODULE src/Mod/Test/Gui/QtUnitGui._UnitTest.pyi
+module_doc:
+  Typed public method signatures for the ``QtUnitGui._UnitTest`` PyCXX type.
+classes:
+  class _UnitTest
+    doc:
+      GUI wrapper for the Qt unit-test runner panel.
+    methods:
+      - def clearErrorList(self) -> None
+        doc:
+          Clear the displayed error list.
+      - def insertError(self, failure: str, details: str, /) -> None
+        doc:
+          Add one failure entry to the error list.
+      - def setUnitTest(self, unit: str, /) -> None
+        doc:
+          Set the active unit test name.
+      - def getUnitTest(self) -> str
+        doc:
+          Return the active unit test name.
+      - def setStatusText(self, text: str, /) -> None
+        doc:
+          Set the status text shown by the runner.
+      - def setProgressFraction(self, fraction: float, color: str='', /) -> None
+        doc:
+          Update the progress indicator fraction.
+      - def errorDialog(self, title: str, message: str, /) -> None
+        doc:
+          Show one error dialog.
+      - def setRunCount(self, count: int, /) -> None
+        doc:
+          Set the total run count.
+      - def setFailCount(self, count: int, /) -> None
+        doc:
+          Set the failure count.
+      - def setErrorCount(self, count: int, /) -> None
+        doc:
+          Set the error count.
+      - def setRemainCount(self, count: int, /) -> None
+        doc:
+          Set the remaining-test count.
+      - def updateGUI(self) -> None
+        doc:
+          Refresh the runner GUI.
+      - def addUnitTest(self, unit: str, /) -> None
+        doc:
+          Add one unit test to the runner list.
+      - def clearUnitTests(self) -> None
+        doc:
+          Clear the registered unit tests.
+```

@@ -1,0 +1,301 @@
+---
+title: "Transactions and file tools"
+description: "Transactions, rollback, save-state inspection, save-location prompting, autosave, and guarded Python execution."
+---
+
+Transactions, rollback, save-state inspection, save-location prompting, autosave, and guarded Python execution.
+
+Tool count: `12`.
+
+Client note: `ctx` is injected by the MCP server and is not supplied as a user argument.
+
+## `autosave`
+
+Source: `Parashell-Modules/Source/Bridge/tools/autosave.py`
+
+Signature:
+
+```python
+autosave(doc_name: str | None = None, fallback_dir: str | None = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Save Parashell documents to disk.
+
+Saves the active document, a named document, or all open documents. Documents
+that already have a file path are saved in place. Documents without a stored
+path are written as <Name>.FCStd into fallback_dir, or into your home
+directory (e.g. C:\Users\<you> on Windows) when fallback_dir is omitted.
+Runs automatically before every execute_code call.
+
+Args:
+    doc_name: Name of a specific document to save. If omitted, all open
+        documents are saved.
+    fallback_dir: Directory used to save documents that have no FileName
+        yet. If omitted, the user's home directory is used.
+```
+
+## `execute_code`
+
+Source: `Parashell-Modules/Source/Bridge/tools/execute_code.py`
+
+Signature:
+
+```python
+execute_code(code: str, reason: str, expected_action: str, transaction_id: str) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Execute arbitrary Python code in Parashell.
+
+Parashell exposes a FreeCAD-compatible Python API. Import the API
+under its original module names inside the snippet - use 'import FreeCAD' and
+'import FreeCADGui' with the FreeCAD-compatible API. Object TypeIds (e.g.
+'Part::Box', 'PartDesign::Body') are FreeCAD-compatible.
+
+Every model edit must run inside an open transaction. Open one with
+transaction_create, pass its id here, then transaction_apply to persist the
+changes or transaction_cancel to roll them back.
+
+Args:
+    code: The Python code to execute inside Parashell's interpreter.
+    reason: A non-technical, straight-to-the-point explanation of why you
+        are running this code. Must be between 10 and 25 words.
+    expected_action: A non-technical, straight-to-the-point description of
+        the expected output and logic. Must be between 5 and 15 words.
+    transaction_id: Id of the open transaction returned by transaction_create.
+```
+
+## `is_file_saved`
+
+Source: `Parashell-Modules/Source/Bridge/tools/is_file_saved.py`
+
+Signature:
+
+```python
+is_file_saved(doc_name: str | None = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Report whether a document is saved to a file on disk.
+
+Args:
+    doc_name: Document to check. If omitted, the active document is used.
+```
+
+## `request_file_save`
+
+Source: `Parashell-Modules/Source/Bridge/tools/request_file_save.py`
+
+Signature:
+
+```python
+request_file_save(doc_name: str | None = None, suggested_name: str | None = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Ask the user where to save a model via a save-location prompt.
+
+Opens a dialog letting the user pick a folder and a file name (the .FCStd
+extension is fixed), then saves the document there. Use this when a model has
+no save location yet so applied changes persist where the user wants. Returns
+where the model was saved, or that the user cancelled.
+
+Args:
+    doc_name: Document to save. If omitted, the active document is used.
+    suggested_name: Optional default file name to pre-fill (without extension).
+```
+
+## `rollback_to_transaction`
+
+Source: `Parashell-Modules/Source/Bridge/tools/rollback_to_transaction.py`
+
+Signature:
+
+```python
+rollback_to_transaction(transaction_id: str) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Hard-reset a document to the exact state of an applied transaction.
+
+Like 'git reset --hard <commit>': restores the document to the checkpoint
+captured when the given transaction was applied and discards every change
+made after it, no matter how many transactions sit on top. Transactions
+newer than the target are marked cancelled. Only applied transactions have a
+checkpoint to roll back to. This destroys later work - confirm with the user
+before using it when applied changes would be lost.
+
+Args:
+    transaction_id: Id of the applied transaction to roll back to.
+```
+
+## `transaction_apply`
+
+Source: `Parashell-Modules/Source/Bridge/tools/transaction_apply.py`
+
+Signature:
+
+```python
+transaction_apply(transaction_id: str) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Apply an open transaction: commit its changes, recompute, and save.
+
+Finalizes every edit made under the transaction as a single atomic change,
+recomputes the document, and autosaves it (to its existing path, or to your
+home directory as <Name>.FCStd if it has none). The transaction becomes
+'applied'.
+
+Args:
+    transaction_id: Id of the open transaction to apply.
+```
+
+## `transaction_cancel`
+
+Source: `Parashell-Modules/Source/Bridge/tools/transaction_cancel.py`
+
+Signature:
+
+```python
+transaction_cancel(transaction_id: str) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Cancel a transaction and roll back its changes.
+
+For an open transaction this aborts and undoes every change made under it.
+For an already-applied transaction it undoes the committed change (only
+possible if no newer transaction sits on top of it). The transaction becomes
+'cancelled' and can then be removed with transaction_delete.
+
+Args:
+    transaction_id: Id of the transaction to cancel.
+```
+
+## `transaction_create`
+
+Source: `Parashell-Modules/Source/Bridge/tools/transaction_create.py`
+
+Signature:
+
+```python
+transaction_create(doc_name: str, label: str | None = None, reason: str | None = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Open a new transaction against a document and get its id.
+
+Transactions work like Terraform: open one here, route every edit
+(create_object, edit_object, delete_object, insert_part_from_library,
+execute_code, and any other model change) through its id while it is open,
+review the pending changes with transaction_plan, then transaction_apply to
+persist and save them or transaction_cancel to roll everything back. Only one
+transaction can be open per document at a time.
+
+Args:
+    doc_name: Document to open the transaction on.
+    label: Optional human label for the transaction.
+    reason: Optional explanation of what this transaction is for.
+```
+
+## `transaction_delete`
+
+Source: `Parashell-Modules/Source/Bridge/tools/transaction_delete.py`
+
+Signature:
+
+```python
+transaction_delete(transaction_id: str) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Permanently remove a transaction record.
+
+Only cancelled transactions can be deleted; cancel an open or applied
+transaction first. This purges the bookkeeping record only - the document is
+not modified.
+
+Args:
+    transaction_id: Id of the cancelled transaction to delete.
+```
+
+## `transaction_get`
+
+Source: `Parashell-Modules/Source/Bridge/tools/transaction_get.py`
+
+Signature:
+
+```python
+transaction_get(transaction_id: str) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Get the full record of a single transaction, including its operation log.
+
+Args:
+    transaction_id: Id of the transaction to inspect.
+```
+
+## `transaction_list`
+
+Source: `Parashell-Modules/Source/Bridge/tools/transaction_list.py`
+
+Signature:
+
+```python
+transaction_list(doc_name: str | None = None) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+List tracked transactions and their status.
+
+Args:
+    doc_name: Optional document to filter by. If omitted, lists all
+        transactions across every document.
+```
+
+## `transaction_plan`
+
+Source: `Parashell-Modules/Source/Bridge/tools/transaction_plan.py`
+
+Signature:
+
+```python
+transaction_plan(transaction_id: str) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Preview the pending changes of a transaction without persisting them.
+
+Returns a Terraform-style plan of what would change on apply: objects to add,
+change, and destroy, plus the recorded operation log. Safe to call repeatedly.
+
+Args:
+    transaction_id: Id of the transaction returned by transaction_create.
+```

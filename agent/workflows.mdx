@@ -1,0 +1,174 @@
+---
+title: "Workflows"
+description: "Agent workflows for Parashell inspection, creation, modification, validation, drawings, BIM, BOM, and export"
+---
+
+These workflows are intended for agent planning and tool ordering. Adapt the sequence to the user's domain, but preserve inspection before mutation and validation after mutation.
+
+## Inspect existing model
+
+```text
+list_documents()
+get_world_state(doc_name?, include_feature_tree=true, include_geometry=true)
+take_snapshot(doc_name, include_subelements=false)
+get_ortho(focus_object?, display_mode="Shaded")
+```
+
+Use `include_subelements=true` only when a face, edge, or vertex must be targeted.
+
+## Create a parametric part
+
+```text
+get_world_state()
+is_file_saved(doc_name)
+request_file_save(doc_name, suggested_name)  # if unsaved and substantial work
+transaction_create(doc_name, label="Create parametric part", reason="...")
+create_spreadsheet(doc_name, name="Spreadsheet")
+set_spreadsheet_cells(doc_name, "Spreadsheet", cells)
+set_spreadsheet_aliases(doc_name, "Spreadsheet", aliases)
+create_object(doc_name, "PartDesign::Body", "PartBody", transaction_id)
+create_object(doc_name, "Sketcher::SketchObject", "BaseSketch", transaction_id, obj_properties={...})
+edit_sketch_geometry(doc_name, "BaseSketch", geometry=[...])
+add_sketch_constraints(doc_name, "BaseSketch", constraints=[...])
+create_object/edit_object for Pad/Pocket/Fillet/Chamfer features
+transaction_plan(transaction_id)
+transaction_apply(transaction_id)
+get_ortho(focus_object="PartBody")
+validate_document(doc_name, deep_geometry=true, run_bop_check=true)
+```
+
+If a typed PartDesign feature workflow is not exposed enough for the operation, use `execute_code` inside the same transaction to create the missing feature, then validate with MCP tools.
+
+## Modify an existing feature
+
+```text
+get_world_state(doc_name, include_feature_tree=true, include_geometry=true)
+get_feature_tree(doc_name, body_name?, include_orphans=true)
+get_object(doc_name, target_feature)
+transaction_create(doc_name, label="Modify feature", reason="...")
+edit_object(doc_name, target_feature, obj_properties, transaction_id)
+transaction_plan(transaction_id)
+transaction_apply(transaction_id)
+get_ortho(focus_object=target_body)
+check_objects(doc_name, [target_body])
+validate_document(doc_name, deep_geometry=true, run_bop_check=true)
+```
+
+Edit upstream parameters or sketches instead of replacing downstream solids.
+
+## Repair invalid geometry
+
+```text
+get_world_state(doc_name, include_geometry=true)
+check_objects(doc_name, only_unhealthy=true)
+check_geometry(doc_name, obj_names?, run_bop_check=true, only_invalid=true)
+get_shape_info(doc_name, target)
+```
+
+Then choose the smallest non-destructive repair:
+
+- Recompute stale objects with `recompute_document`.
+- Fix missing references by editing upstream feature properties.
+- Fix sketches with `get_sketch`, `edit_sketch_geometry`, `add_sketch_constraints`, or `clear_sketch_constraints`.
+- For boolean failures, retry with `boolean_op(verify_growth=true)` or rebuild operands.
+- Ask before deleting, replacing, flattening, or converting parametric geometry.
+
+## Validate created geometry
+
+```text
+get_ortho(focus_object=target)
+get_view_with_overlays(doc_name, bbox_objects=[target], measurements=[...])
+get_bounding_box(doc_name, target)
+verify_solid(doc_name, target, samples=12)
+analyze_mass_properties(doc_name, target, density?)
+check_geometry(doc_name, [target], run_bop_check=true)
+```
+
+For hollow objects, combine `verify_solid` with section-like `display_mode="Wireframe"` or `display_mode="Hidden line"` screenshots.
+
+## Assembly inspection and clash check
+
+```text
+get_world_state(doc_name, include_feature_tree=true, include_geometry=true)
+take_snapshot(doc_name, include_subelements=false)
+get_ortho(display_mode="Shaded")
+check_interferences(doc_name, obj_names?, clearance=desired_clearance, compute_volume=true)
+measure_distance(doc_name, a, b)
+```
+
+Do not fuse, flatten, or delete component identity unless the user explicitly requests it.
+
+## Spreadsheet-driven variables
+
+```text
+create_spreadsheet(doc_name, "Spreadsheet")
+set_spreadsheet_cells(doc_name, "Spreadsheet", {"A1": "Length", "B1": "40 mm"})
+set_spreadsheet_aliases(doc_name, "Spreadsheet", {"B1": "Length"})
+read_spreadsheet(doc_name, "Spreadsheet")
+style_spreadsheet_cells(doc_name, "Spreadsheet", targets="A1:B10", style=["bold"])
+```
+
+When inserting a variable, preserve alphabetical order by alias name. Use `modify_spreadsheet_structure` before writing if rows must be inserted.
+
+## Sketch authoring
+
+```text
+create_object(doc_name, "Sketcher::SketchObject", "ProfileSketch", transaction_id, obj_properties={...})
+edit_sketch_geometry(doc_name, "ProfileSketch", operation="append", geometry=[...])
+add_sketch_constraints(doc_name, "ProfileSketch", constraints=[...])
+get_sketch(doc_name, "ProfileSketch")
+get_view("Front", focus_object="ProfileSketch")
+```
+
+A sketch is incomplete if closure, plane, attachment, and constraints are unknown for a downstream feature.
+
+## Visual regression
+
+```text
+capture_view_baseline("before", view_name="Isometric", focus_object=target)
+mutation...
+compare_views("before", view_name="Isometric", focus_object=target, title="Before/after")
+clear_view_baselines("before")
+```
+
+Use this when the task is "make this look like", "do not disturb", or any operation where geometry shape is easier to verify visually than textually.
+
+## TechDraw
+
+```text
+list_techdraw_pages(doc_name)
+get_techdraw_page(page_name, doc_name, width=1600, height=1200)
+```
+
+After modifying source geometry, recompute and render the page before claiming the drawing is current.
+
+## BOM and metadata
+
+```text
+get_world_state(doc_name, include_feature_tree=true, include_geometry=true)
+take_snapshot(doc_name, include_subelements=false)
+get_object(doc_name, object_name)
+```
+
+Count actual instances. Preserve labels, part numbers, material fields, supplier fields, revision metadata, and assembly hierarchy. Mark missing metadata as unknown; do not invent procurement fields.
+
+## BIM / architecture
+
+```text
+get_world_state(doc_name, include_feature_tree=true, include_geometry=true)
+take_snapshot(doc_name, include_subelements=false)
+get_object(doc_name, wall_or_space)
+```
+
+Preserve semantic object type, IFC properties, level/storey, spaces, grids, hosts, openings, and placements. Use typed BIM/Arch APIs through `execute_code` only when MCP lacks a direct operation.
+
+## Export
+
+```text
+get_world_state(doc_name)
+validate_document(doc_name, deep_geometry=true, run_bop_check=true)
+request_file_save(doc_name?)  # if saving model location is needed
+execute_code(code_that_exports_requested_objects, reason, expected_action, transaction_id)
+```
+
+Confirm format, target objects, and overwrite risk before export. Do not export stale or invalid geometry without stating the validation result.

@@ -1,0 +1,294 @@
+---
+title: "TypeIds and properties"
+description: "Common Parashell object TypeIds, property patterns, and expression-binding rules"
+---
+
+Use TypeIds with `create_object`, `create_objects`, `doc.addObject`, and object inspection. This page is a curated map; use runtime introspection for exact active-build availability.
+
+## Core application TypeIds
+
+```text
+App::DocumentObjectGroup
+App::Part
+App::Link
+App::LinkGroup
+App::FeaturePython
+App::Annotation
+```
+
+Common properties:
+
+```text
+Label
+Visibility
+Group
+Placement
+ExpressionEngine
+```
+
+## Part TypeIds
+
+```text
+Part::Feature
+Part::FeaturePython
+Part::Part2DObject
+Part::Part2DObjectPython
+Part::Box
+Part::Cylinder
+Part::Sphere
+Part::Cone
+Part::Torus
+Part::Prism
+Part::Plane
+Part::Line
+Part::Circle
+Part::Ellipse
+Part::Polygon
+Part::Extrusion
+Part::Revolution
+Part::Sweep
+Part::Loft
+Part::Fuse
+Part::MultiFuse
+Part::Cut
+Part::Common
+Part::Compound
+Part::Fillet
+Part::Chamfer
+Part::Thickness
+Part::Mirror
+```
+
+Common primitive properties:
+
+```text
+Length
+Width
+Height
+Radius
+Radius1
+Radius2
+Angle
+Placement
+Shape
+```
+
+Boolean properties:
+
+```text
+Base
+Tool
+Shapes
+```
+
+## PartDesign TypeIds
+
+```text
+PartDesign::Body
+PartDesign::Feature
+PartDesign::Pad
+PartDesign::Pocket
+PartDesign::Revolution
+PartDesign::Groove
+PartDesign::AdditivePipe
+PartDesign::SubtractivePipe
+PartDesign::AdditiveLoft
+PartDesign::SubtractiveLoft
+PartDesign::Fillet
+PartDesign::Chamfer
+PartDesign::Draft
+PartDesign::Thickness
+PartDesign::LinearPattern
+PartDesign::PolarPattern
+PartDesign::Mirrored
+PartDesign::MultiTransform
+PartDesign::ShapeBinder
+PartDesign::SubShapeBinder
+PartDesign::Plane
+PartDesign::Line
+PartDesign::Point
+PartDesign::CoordinateSystem
+PartDesign::AdditiveBox
+PartDesign::AdditiveCylinder
+PartDesign::AdditiveSphere
+PartDesign::AdditiveCone
+PartDesign::SubtractiveBox
+PartDesign::SubtractiveCylinder
+PartDesign::SubtractiveSphere
+PartDesign::SubtractiveCone
+```
+
+Common feature properties:
+
+```text
+Profile
+BaseFeature
+Length
+Length2
+Type
+Reversed
+Midplane
+Offset
+Angle
+Axis
+Radius
+Size
+Support
+AttachmentSupport
+MapMode
+```
+
+## Sketcher TypeIds
+
+```text
+Sketcher::SketchObject
+Sketcher::SketchObjectPython
+```
+
+Common sketch members:
+
+```text
+Geometry
+Constraints
+OpenVertices
+Placement
+Support
+AttachmentSupport
+MapMode
+```
+
+Use `get_sketch` for normalized geometry and constraint serialization.
+
+## Spreadsheet TypeIds
+
+```text
+Spreadsheet::Sheet
+```
+
+Common sheet operations:
+
+```text
+set
+get
+getContents
+setAlias
+getAlias
+clear
+mergeCells
+splitCell
+insertRows
+removeRows
+insertColumns
+removeColumns
+```
+
+Use MCP spreadsheet tools first because they normalize cells, aliases, ranges, and recompute.
+
+## TechDraw TypeIds
+
+```text
+TechDraw::DrawPage
+TechDraw::DrawSVGTemplate
+TechDraw::DrawViewPart
+TechDraw::DrawViewDraft
+TechDraw::DrawProjGroup
+TechDraw::DrawProjGroupItem
+TechDraw::DrawViewSection
+TechDraw::DrawViewDetail
+TechDraw::DrawViewDimension
+TechDraw::DrawViewBalloon
+TechDraw::DrawLeaderLine
+TechDraw::DrawViewAnnotation
+TechDraw::DrawViewSymbol
+TechDraw::DrawViewImage
+TechDraw::DrawHatch
+```
+
+Common properties:
+
+```text
+Source
+Direction
+Scale
+ScaleType
+X
+Y
+Rotation
+Caption
+PageResult
+Template
+Views
+```
+
+## Mesh TypeIds
+
+```text
+Mesh::Feature
+Mesh::FeaturePython
+```
+
+Common properties:
+
+```text
+Mesh
+Placement
+```
+
+Mesh objects are faceted and should not be treated as final parametric solids.
+
+## Draft / BIM / FEM TypeIds
+
+Draft and BIM often create Python-backed objects with generic TypeIds plus a `Proxy.Type` or workbench-specific proxy. Inspect both:
+
+```python
+print(obj.TypeId)
+print(getattr(getattr(obj, "Proxy", None), "Type", None))
+```
+
+FEM objects are analysis-specific. Discover available FEM TypeIds with:
+
+```python
+print(doc.supportedTypes())
+```
+
+## Property discovery
+
+Use:
+
+```python
+for prop in obj.PropertiesList:
+    print(prop, getattr(obj, prop))
+```
+
+Use richer metadata when available:
+
+```python
+print(obj.getTypeIdOfProperty(prop))
+print(obj.getGroupOfProperty(prop))
+print(obj.getDocumentationOfProperty(prop))
+print(obj.getEditorMode(prop))
+```
+
+## Expression binding
+
+Any expression-capable property can be driven from a spreadsheet alias:
+
+```python
+obj.setExpression("Length", "Spreadsheet.PlateLength")
+```
+
+Inspect expressions:
+
+```python
+for prop in obj.PropertiesList:
+    try:
+        expr = obj.getExpression(prop)
+    except Exception:
+        expr = None
+    if expr:
+        print(prop, expr)
+```
+
+## Agent rule
+
+Never guess a property name on a live model. Inspect `PropertiesList` or use a typed MCP tool that already knows the property schema.

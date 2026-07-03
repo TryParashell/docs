@@ -1,0 +1,296 @@
+---
+title: "Python API"
+description: "FreeCAD-compatible Python API patterns for Parashell agents"
+---
+
+This page documents the Python surface exposed to `execute_code`. The import names are the upstream module names required by the compatibility layer.
+
+## Document access
+
+```python
+import FreeCAD
+
+doc = FreeCAD.ActiveDocument
+if doc is None:
+    doc = FreeCAD.newDocument("Model")
+
+doc = FreeCAD.getDocument("Unnamed")
+names = [d.Name for d in FreeCAD.listDocuments().values()]
+doc.recompute()
+```
+
+Object lookup:
+
+```python
+obj = doc.getObject("Pad001")
+if obj is None:
+    raise ValueError("target object not found")
+```
+
+## Object creation
+
+```python
+box = doc.addObject("Part::Box", "Block")
+box.Length = 40
+box.Width = 20
+box.Height = 10
+
+cyl = doc.addObject("Part::Cylinder", "Pin")
+cyl.Radius = 5
+cyl.Height = 30
+
+body = doc.addObject("PartDesign::Body", "Body")
+sketch = body.newObject("Sketcher::SketchObject", "Sketch")
+```
+
+Prefer `create_object`, `create_objects`, and builder MCP tools when they cover the operation.
+
+## Placement and rotation
+
+```python
+base = FreeCAD.Vector(10, 0, 5)
+rot = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), 45)
+obj.Placement = FreeCAD.Placement(base, rot)
+```
+
+Rotation between vectors:
+
+```python
+direction = FreeCAD.Vector(10, 10, 20)
+rot = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), direction)
+```
+
+Placement composition:
+
+```python
+obj.Placement = FreeCAD.Placement(FreeCAD.Vector(10, 0, 0), FreeCAD.Rotation()).multiply(obj.Placement)
+```
+
+## Spreadsheet-driven parameters
+
+```python
+sheet = doc.addObject("Spreadsheet::Sheet", "Spreadsheet")
+sheet.set("A1", "Length")
+sheet.set("B1", "40 mm")
+sheet.setAlias("B1", "Length")
+sheet.set("A2", "PlateThickness")
+sheet.set("B2", "6 mm")
+sheet.setAlias("B2", "PlateThickness")
+```
+
+Expression binding:
+
+```python
+pad.Length = 6
+pad.setExpression("Length", "Spreadsheet.PlateThickness")
+box.setExpression("Length", "Spreadsheet.Length")
+```
+
+Variable naming:
+
+- UpperCamelCase aliases: `WallThickness`, `BoltCircleDia`, `PlateLength`.
+- Column A label, column B value.
+- Keep rows alphabetically sorted by alias name.
+- Do not hard-code driving dimensions when a spreadsheet alias should control them.
+
+## Sketcher geometry
+
+```python
+import Part
+import Sketcher
+
+sketch = doc.addObject("Sketcher::SketchObject", "ProfileSketch")
+i0 = sketch.addGeometry(Part.LineSegment(FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(40, 0, 0)), False)
+i1 = sketch.addGeometry(Part.LineSegment(FreeCAD.Vector(40, 0, 0), FreeCAD.Vector(40, 20, 0)), False)
+i2 = sketch.addGeometry(Part.LineSegment(FreeCAD.Vector(40, 20, 0), FreeCAD.Vector(0, 20, 0)), False)
+i3 = sketch.addGeometry(Part.LineSegment(FreeCAD.Vector(0, 20, 0), FreeCAD.Vector(0, 0, 0)), False)
+```
+
+Construction geometry:
+
+```python
+centerline = sketch.addGeometry(Part.LineSegment(FreeCAD.Vector(20, -10, 0), FreeCAD.Vector(20, 30, 0)), True)
+```
+
+Common primitives:
+
+```python
+Part.LineSegment(a, b)
+Part.Circle(center, normal, radius)
+Part.ArcOfCircle(circle, start_rad, end_rad)
+Part.Point(FreeCAD.Vector(0, 0, 0))
+```
+
+## Sketcher constraints
+
+```python
+sketch.addConstraint(Sketcher.Constraint("Coincident", 0, 2, 1, 1))
+sketch.addConstraint(Sketcher.Constraint("Horizontal", 0))
+sketch.addConstraint(Sketcher.Constraint("Vertical", 1))
+sketch.addConstraint(Sketcher.Constraint("DistanceX", 0, 1, 0, 2, 40))
+sketch.addConstraint(Sketcher.Constraint("DistanceY", 1, 1, 1, 2, 20))
+sketch.addConstraint(Sketcher.Constraint("Radius", 4, 5))
+sketch.addConstraint(Sketcher.Constraint("Diameter", 4, 10))
+sketch.addConstraint(Sketcher.Constraint("Angle", 0, 1, math.radians(45)))
+```
+
+Position ids:
+
+```text
+0 edge/none
+1 start
+2 end
+3 center
+```
+
+Use `get_sketch` before editing existing sketches. It returns geometry indices, constraint indices, construction flags, open vertices, attachment, and serialized constraints.
+
+## PartDesign feature pattern
+
+```python
+body = doc.addObject("PartDesign::Body", "BracketBody")
+sketch = body.newObject("Sketcher::SketchObject", "BaseSketch")
+
+pad = body.newObject("PartDesign::Pad", "BasePad")
+pad.Profile = sketch
+pad.Length = 8
+body.Tip = pad
+doc.recompute()
+```
+
+Common features and properties:
+
+```text
+PartDesign::Pad        Profile, Length, Reversed, Midplane
+PartDesign::Pocket     Profile, Length, Type, Reversed
+PartDesign::Revolution Profile, Axis, Angle
+PartDesign::Fillet     Base, Radius
+PartDesign::Chamfer    Base, Size
+```
+
+Inspect actual property names with `get_object` or Python `obj.PropertiesList` before uncommon assignments.
+
+## Part module geometry
+
+```python
+import Part
+
+box_shape = Part.makeBox(40, 20, 10)
+cyl_shape = Part.makeCylinder(5, 30)
+sphere_shape = Part.makeSphere(10)
+cone_shape = Part.makeCone(8, 3, 20)
+torus_shape = Part.makeTorus(20, 3)
+```
+
+Boolean shape operations:
+
+```python
+fused = shape_a.fuse(shape_b).removeSplitter()
+cut = shape_a.cut(shape_b).removeSplitter()
+common = shape_a.common(shape_b).removeSplitter()
+```
+
+Wire, face, extrude:
+
+```python
+edges = [
+    Part.LineSegment(FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(40, 0, 0)).toShape(),
+    Part.LineSegment(FreeCAD.Vector(40, 0, 0), FreeCAD.Vector(40, 20, 0)).toShape(),
+    Part.LineSegment(FreeCAD.Vector(40, 20, 0), FreeCAD.Vector(0, 20, 0)).toShape(),
+    Part.LineSegment(FreeCAD.Vector(0, 20, 0), FreeCAD.Vector(0, 0, 0)).toShape(),
+]
+wire = Part.Wire(edges)
+face = Part.Face(wire)
+solid = face.extrude(FreeCAD.Vector(0, 0, 6))
+obj = doc.addObject("Part::Feature", "ExtrudedProfile")
+obj.Shape = solid
+```
+
+Use this for unsupported geometry only. Prefer parametric PartDesign features for final editable designs.
+
+## Draft module
+
+```python
+import Draft
+
+line = Draft.make_line(FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(100, 0, 0))
+wire = Draft.make_wire([FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(10, 0, 0), FreeCAD.Vector(10, 10, 0)], closed=True)
+circle = Draft.make_circle(10)
+clone = Draft.clone(line)
+doc.recompute()
+```
+
+Use Draft for 2D construction, imported DXF/SVG cleanup, reference wires, and non-PartDesign 2D objects.
+
+## TechDraw
+
+Prefer TechDraw MCP tools for discovery and rendering:
+
+```text
+list_techdraw_pages(doc_name)
+get_techdraw_page(page_name, doc_name, width, height)
+```
+
+Python pattern:
+
+```python
+page = doc.addObject("TechDraw::DrawPage", "Page")
+view = doc.addObject("TechDraw::DrawViewPart", "FrontView")
+view.Source = [doc.getObject("BracketBody")]
+page.addView(view)
+doc.recompute()
+```
+
+Do not claim drawings are current unless recomputed and rendered.
+
+## Mesh
+
+```python
+import Mesh
+
+mesh = Mesh.Mesh()
+mesh.read("/path/requested/by/user.stl")
+obj = doc.addObject("Mesh::Feature", "ImportedMesh")
+obj.Mesh = mesh
+doc.recompute()
+```
+
+Mesh output is faceted. Do not treat mesh repair or conversion as proof of exact parametric reconstruction.
+
+## BIM / Arch
+
+```python
+if Arch is not None:
+    wall = Arch.makeWall(length=5000, width=200, height=3000)
+    wall.Label = "Level1Wall"
+    doc.recompute()
+```
+
+Preserve semantic type, level/storey, hosted openings, IFC metadata, and placement. Do not convert BIM objects into anonymous solids unless explicitly requested as a lossy export or diagnostic step.
+
+## Export and save
+
+Use MCP file-save tools first. If Python export is required and the user has requested the path:
+
+```python
+import Part
+
+obj = doc.getObject("Bracket")
+Part.export([obj], "/requested/path/bracket.step")
+```
+
+Do not write arbitrary files outside user-requested model save/export paths.
+
+## Validation in Python
+
+```python
+shape = obj.Shape
+if shape is None or shape.isNull():
+    raise RuntimeError("shape is null")
+if not shape.isValid():
+    raise RuntimeError("shape is invalid")
+volume = float(shape.Volume)
+bbox = shape.BoundBox
+```
+
+Prefer MCP validators after Python execution because they return structured payloads and screenshots where available.

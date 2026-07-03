@@ -11,10 +11,40 @@
   "navigation": {
     "pages": [
       {
-        "group": "Getting Started",
+        "group": "Agent Reference",
         "pages": [
           "index",
-          "quickstart"
+          "quickstart",
+          "agent/operating-model",
+          "agent/schemas",
+          "agent/api-coverage",
+          "agent/source-scan-coverage",
+          "agent/best-practices",
+          "agent/python-quirks",
+          "agent/compatible-modules",
+          "agent/runtime-introspection",
+          "agent/typeids-properties",
+          "agent/python-api",
+          "agent/python-syntax",
+          "agent/workflows",
+          "agent/python-reference-core",
+          "agent/python-reference-modeling",
+          "agent/python-reference-workbenches",
+          "agent/python-reference-misc",
+          "agent/python-source-symbols"
+        ]
+      },
+      {
+        "group": "MCP Tools",
+        "pages": [
+          "agent/tools/index",
+          "agent/tools/document-objects",
+          "agent/tools/inspection-rendering",
+          "agent/tools/sketch-spreadsheet",
+          "agent/tools/geometry-builders",
+          "agent/tools/validation-measurement",
+          "agent/tools/transactions-files",
+          "agent/tools/calcinator"
         ]
       }
     ],

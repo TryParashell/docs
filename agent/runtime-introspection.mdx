@@ -1,0 +1,192 @@
+---
+title: "Runtime introspection"
+description: "Read-only Python snippets for discovering exact FreeCAD-compatible API symbols in Parashell"
+---
+
+Use these snippets when a method, property, TypeId, or module symbol is not present in the curated docs. Execute inside Parashell through `execute_code`. Keep snippets read-only unless the user task already requires mutation.
+
+## Module symbols
+
+```python
+import FreeCAD
+import Part
+import Sketcher
+
+symbols = {
+    "FreeCAD": [name for name in dir(FreeCAD) if not name.startswith("_")],
+    "Part": [name for name in dir(Part) if not name.startswith("_")],
+    "Sketcher": [name for name in dir(Sketcher) if not name.startswith("_")],
+}
+print(symbols)
+```
+
+## Optional module availability
+
+```python
+mods = {}
+for name in ["Draft", "Mesh", "MeshPart", "TechDraw", "Spreadsheet", "Arch", "BIM", "Fem", "Import", "ImportGui"]:
+    try:
+        module = __import__(name)
+        mods[name] = [s for s in dir(module) if not s.startswith("_")][:200]
+    except Exception as exc:
+        mods[name] = f"unavailable: {exc}"
+print(mods)
+```
+
+## Document-supported TypeIds
+
+```python
+import FreeCAD
+
+doc = FreeCAD.ActiveDocument
+if doc is None:
+    raise RuntimeError("no active document")
+if hasattr(doc, "supportedTypes"):
+    print(doc.supportedTypes())
+else:
+    print("supportedTypes unavailable")
+```
+
+## Derived TypeIds
+
+```python
+import FreeCAD
+
+for base in ["App::DocumentObject", "Part::Feature", "PartDesign::Feature", "Sketcher::SketchObject", "TechDraw::DrawView"]:
+    try:
+        print(base, FreeCAD.getAllDerivedFrom(base))
+    except Exception as exc:
+        print(base, f"unavailable: {exc}")
+```
+
+## Object properties
+
+```python
+import FreeCAD
+
+doc = FreeCAD.ActiveDocument
+obj = doc.getObject("TargetObject")
+if obj is None:
+    raise RuntimeError("target not found")
+
+rows = []
+for prop in obj.PropertiesList:
+    entry = {"name": prop}
+    for method_name, key in [
+        ("getTypeIdOfProperty", "type"),
+        ("getGroupOfProperty", "group"),
+        ("getDocumentationOfProperty", "documentation"),
+        ("getEditorMode", "editor_mode"),
+    ]:
+        method = getattr(obj, method_name, None)
+        if callable(method):
+            try:
+                entry[key] = method(prop)
+            except Exception as exc:
+                entry[key] = f"error: {exc}"
+    try:
+        entry["value"] = str(getattr(obj, prop))
+    except Exception as exc:
+        entry["value"] = f"error: {exc}"
+    rows.append(entry)
+print(rows)
+```
+
+## ViewObject properties
+
+```python
+import FreeCAD
+
+doc = FreeCAD.ActiveDocument
+obj = doc.getObject("TargetObject")
+view = getattr(obj, "ViewObject", None)
+if view is None:
+    print("no ViewObject")
+else:
+    rows = []
+    for prop in view.PropertiesList:
+        entry = {"name": prop}
+        try:
+            entry["value"] = str(getattr(view, prop))
+        except Exception as exc:
+            entry["value"] = f"error: {exc}"
+        rows.append(entry)
+    print(rows)
+```
+
+## Shape topology and methods
+
+```python
+import FreeCAD
+
+doc = FreeCAD.ActiveDocument
+obj = doc.getObject("TargetObject")
+shape = getattr(obj, "Shape", None)
+if shape is None or shape.isNull():
+    raise RuntimeError("target has no usable shape")
+
+print({
+    "shape_type": shape.ShapeType,
+    "valid": shape.isValid(),
+    "volume": getattr(shape, "Volume", None),
+    "area": getattr(shape, "Area", None),
+    "solids": len(getattr(shape, "Solids", [])),
+    "faces": len(getattr(shape, "Faces", [])),
+    "edges": len(getattr(shape, "Edges", [])),
+    "vertices": len(getattr(shape, "Vertexes", [])),
+    "methods": [name for name in dir(shape) if not name.startswith("_")],
+})
+```
+
+## Sketch contents
+
+Prefer `get_sketch`. Use Python only if raw API detail is required.
+
+```python
+import FreeCAD
+
+doc = FreeCAD.ActiveDocument
+sketch = doc.getObject("Sketch")
+if sketch is None:
+    raise RuntimeError("sketch not found")
+
+print({
+    "type_id": sketch.TypeId,
+    "geometry_count": len(sketch.Geometry),
+    "constraint_count": len(sketch.Constraints),
+    "open_vertices": [str(v) for v in getattr(sketch, "OpenVertices", [])],
+    "geometry_types": [type(g).__name__ for g in sketch.Geometry],
+    "constraint_types": [str(c.Type) for c in sketch.Constraints],
+    "properties": sketch.PropertiesList,
+})
+```
+
+## Expression bindings
+
+```python
+import FreeCAD
+
+doc = FreeCAD.ActiveDocument
+obj = doc.getObject("TargetObject")
+bindings = {}
+for prop in obj.PropertiesList:
+    try:
+        expr = obj.getExpression(prop)
+    except Exception:
+        expr = None
+    if expr:
+        bindings[prop] = expr
+print(bindings)
+```
+
+## Safe introspection transaction pattern
+
+Even read-only introspection goes through `execute_code`, which requires a transaction id. Use:
+
+```text
+transaction_create(doc_name, label="Inspect API", reason="Read exact runtime API surface")
+execute_code(code, reason, expected_action, transaction_id)
+transaction_cancel(transaction_id)
+```
+
+If the snippet mutated nothing, cancellation is a bookkeeping cleanup. If it did mutate accidentally, cancellation restores the document.

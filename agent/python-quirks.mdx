@@ -1,0 +1,86 @@
+---
+title: "Python quirks"
+description: "Source-scan Python quirks for Parashell agents using the FreeCAD-compatible API"
+---
+
+This page is derived only from scanning `/Parashell`. It records Python-facing behavior that affects agent execution and retrieval.
+
+## Source priority
+
+- Use `.pyi` stubs as the first static callable reference when present. The all-file scan found 277 `.pyi` files, all parse-clean under the active interpreter.
+- Treat `.py` implementation files as operational evidence, not as a guaranteed import target. The scan found 34 `.py` files that do not parse under the active interpreter.
+- Runtime truth still belongs to the loaded Parashell process: imported modules, `doc.supportedTypes()`, object `PropertiesList`, property metadata, and actual object `TypeId`.
+- Do not bulk import arbitrary source files from `/Parashell` for discovery. Use loaded modules or stubs, then confirm with runtime introspection.
+
+## Stub semantics
+
+- Stubs frequently use `from __future__ import annotations`, `TYPE_CHECKING`, `Final`, `Literal`, `TypeAlias`, `TypedDict`, and `@overload`. These are signature/reference constructs, not proof that every referenced name is importable at runtime from the stub file path.
+- Repeated `@overload` definitions describe accepted call shapes. Prefer the most specific overload for argument construction; use the broad implementation signature as the fallback.
+- Class and attribute docstrings in the stubs are source-adjacent descriptors. Use them as descriptors, but still inspect runtime object properties for dynamic objects.
+- Module names in stubs use compatibility import names such as `FreeCAD`, `Part`, `Sketcher`, `Mesh`, `Spreadsheet`, and `TechDraw`.
+
+## Document and transaction quirks
+
+- `FreeCAD.ActiveDocument` and `FreeCAD.activeDocument()` are both represented. Resolve `None` explicitly before modeling.
+- `Document.openTransaction(name)` is documented in the stub as routing through `FreeCAD.setActiveTransaction(name)`. A transaction may be application-scoped, and changes in more than one open document can share one internal transaction id.
+- `FreeCAD.getActiveTransaction()` returns the current transaction name/id tuple or `None`.
+- `FreeCAD.closeActiveTransaction(abort=False, id=0)` closes or aborts the active transaction.
+- `Document.HasPendingTransaction`, `Document.Transacting`, `Document.Recomputing`, `Document.Restoring`, `Document.Importing`, `Document.Partial`, `Document.Temporary`, and `Document.RecomputesFrozen` are document state signals. Read them before assuming the document is mutable or stable.
+- `Document.getFileName()` returns a file path for regular documents and a transient directory for temporary documents.
+- `Document.addObject(...)` accepts optional `objProxy`, `viewProxy`, `attach`, and `viewType`. When `attach=True`, Python proxy binding can call `attach(obj)` before adding the object.
+
+## Object and link quirks
+
+- `DocumentObject.ViewObject` is `None` when GUI is not up. Never assume it exists in headless execution.
+- `DocumentObject.FullName` combines document and internal object name. Use it for disambiguation across loaded documents.
+- `DocumentObject.NoTouch` can suppress touch behavior from property changes. Check it before diagnosing why recompute did not propagate.
+- `DocumentObject.getStatusString()` returns invalid error text, `"Touched"`, or `"Valid"` according to object state.
+- `DocumentObject.getSubObject(...)` accepts string/list/tuple subnames and `retType` values:
+
+```text
+0: Python object
+1: document object or object/matrix tuple
+2: document object, matrix, and Python object
+3: placement
+```
+
+- `DocumentObject.getLinkedObject(...)` can recursively resolve links and optionally return accumulated transforms through a matrix argument.
+- `Document.copyObject(...)`, `Document.moveObject(...)`, and `Document.importLinks(...)` exist for cross-document object movement and external link import. Use `recursive`, `return_all`, and `with_dependencies` intentionally.
+
+## Property quirks
+
+- `PropertyContainer.getPropertyByName(name, checkOwner)` can return linked-object properties. Use `checkOwner=1` to require local ownership or `checkOwner=2` to receive owner plus value.
+- `getTypeOfProperty(name)` returns property status words such as `Hidden`, `NoRecompute`, `NoPersist`, `Output`, `ReadOnly`, `Transient`, and `Input`.
+- `setPropertyStatus(name, val)` accepts int, string, or list of ints/strings. Text values beginning with `-` and negative integer values clear status.
+- `setEditorMode(name, type)` accepts numeric modes or strings. Numeric modes map to default, read-only, hidden, and hidden-read-only.
+- `dumpPropertyContent(Property, Compression=3)` serializes a property into bytes. `restorePropertyContent(name, obj)` accepts any buffer-protocol object.
+- Dynamic property group and documentation are mutable through `setGroupOfProperty(...)` and `setDocumentationOfProperty(...)`.
+
+## Expression quirks
+
+- `DocumentObject.setExpression(path, expression)` accepts a string expression. Binding code also accepts `None` to clear the expression.
+- `DocumentObject.evalExpression(expression)` can evaluate an expression without assigning it.
+- `hiddenref(...)` is registered in the expression engine and is tested as a way to evaluate a reference without ordinary dependency edges.
+- Spreadsheet label references use angle-label syntax such as `<<Spreadsheet>>.Length` and formulas use `<<A>>`-style object/name tokens in some contexts.
+- Spreadsheet formulas in tests use semicolons as function argument separators and support conditional syntax with `? :`.
+
+## Spreadsheet quirks
+
+- Invalid cell addresses or properties raise `ValueError` through the spreadsheet binding.
+- Alias creation rejects duplicates, cell-address aliases, and unit/reserved-word aliases.
+- Clearing an alias uses `setAlias(cell, "")`.
+- Structural row/column edits can move aliases and formulas. Validate with `getAlias`, `getContents`, and recompute.
+- Mixed-unit aggregations return error strings in cells rather than numeric values.
+- Tuple/vector/matrix/rotation/placement formula constructors are exercised by the source tests; validate result type and tolerance after recompute.
+
+## GUI quirks
+
+- Source repeatedly guards GUI imports with `FreeCAD.GuiUp`. Preserve that gate for `FreeCADGui`, viewproviders, selection, active views, viewport projection, and GUI command code.
+- A view-dependent workflow should create geometry, recompute, refresh/update the view, then inspect projected bounds or selection state.
+- GUI stubs are included in the reference pages because they are Python-facing, but headless agents should treat them as unavailable unless `FreeCAD.GuiUp` is true.
+
+## Parseability quirks
+
+- `/Parashell/src/Mod/Test/TestPythonSyntax.py` demonstrates the intended syntax check: walk Python files, parse with `ast.parse`, and allow explicit whitelist entries.
+- The all-file scan found parse failures in generated/templated/workbench files. Treat parse failure as an inspection signal, not as proof the feature is unavailable inside the intended runtime.
+- The `.pyi` reference pages are therefore the safer static API surface; the Python source symbol inventory is a discovery index.

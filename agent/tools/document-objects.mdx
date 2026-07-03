@@ -1,0 +1,401 @@
+---
+title: "Document and object tools"
+description: "Document lifecycle, object CRUD, groups, parts library insertion, appearance, patterns, and recompute."
+---
+
+Document lifecycle, object CRUD, groups, parts library insertion, appearance, patterns, and recompute.
+
+Tool count: `14`.
+
+Client note: `ctx` is injected by the MCP server and is not supplied as a user argument.
+
+## `add_to_group`
+
+Source: `Parashell-Modules/Source/Bridge/tools/add_to_group.py`
+
+Signature:
+
+```python
+add_to_group(doc_name: str, group: str, members: list[str]) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Move existing objects into a group.
+
+Group and members accept either object names or take_snapshot uids.
+
+Args:
+    doc_name: Document containing the objects.
+    group: Group name or uid.
+    members: List of object names / uids to move into the group.
+```
+
+## `create_document`
+
+Source: `Parashell-Modules/Source/Bridge/tools/create_document.py`
+
+Signature:
+
+```python
+create_document(name: str) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Create a new document in Parashell.
+
+Args:
+    name: The name of the document to create.
+```
+
+## `create_group`
+
+Source: `Parashell-Modules/Source/Bridge/tools/create_group.py`
+
+Signature:
+
+```python
+create_group(doc_name: str, name: str, members: list[str] | None = None, parent: str | None = None) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Create an App::DocumentObjectGroup and optionally populate it.
+
+Groups are a lightweight container - useful for organizing a flat object
+list into Base / Column / PlanetSystem.Earth / etc. and for applying a
+single placement to a whole sub-assembly.
+
+Members and parent accept either object names or take_snapshot uids.
+
+Args:
+    doc_name: Document to create the group in.
+    name: Name for the new group.
+    members: Optional list of objects to move into the group at creation.
+    parent: Optional parent group/container the new group should live inside.
+```
+
+## `create_object`
+
+Source: `Parashell-Modules/Source/Bridge/tools/create_object.py`
+
+Signature:
+
+```python
+create_object(doc_name: str, obj_type: str, obj_name: str, transaction_id: str, analysis_name: str | None = None, obj_properties: dict[str, Any] = None) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Create a new object in Parashell. Object type starts with 'Part::', 'Draft::', 'PartDesign::', or 'Fem::'.
+
+Every model edit must run inside an open transaction. Open one with
+transaction_create first, pass its id here, then transaction_apply to persist
+or transaction_cancel to roll back.
+
+Args:
+    doc_name: The name of the document to create the object in.
+    obj_type: The type of the object to create (e.g. 'Part::Box', 'Part::Cylinder', 'Draft::Circle').
+    obj_name: The name of the object to create.
+    transaction_id: Id of the open transaction returned by transaction_create.
+    analysis_name: Optional FEM analysis container name to add the object to.
+    obj_properties: The properties of the object to create.
+```
+
+## `create_objects`
+
+Source: `Parashell-Modules/Source/Bridge/tools/create_objects.py`
+
+Signature:
+
+```python
+create_objects(doc_name: str, items: list[dict[str, Any]], recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Batch-create many objects in a single call.
+
+Each entry in 'items' has the same shape as create_object's parameters:
+    {
+      "Name": "Tier1",                  optional, auto-generated when omitted
+      "Type": "Part::Box",              required, Parashell TypeId
+      "Properties": {                   optional, applied via the same setter
+          "Length": 50,
+          "Width": 50,
+          "Height": 10,
+          "Placement": {"Base": {"x": 0, "y": 0, "z": 100}}
+      },
+      "Analysis": "MyFEMAnalysis"       optional FEM container
+    }
+
+The whole list is processed inside a single GUI task, so the recompute happens
+once at the end (set recompute=False to defer entirely). Errors on individual
+items don't abort the batch - they are reported in the 'errors' array with the
+item index, attempted name, and message.
+
+Args:
+    doc_name: Document to create objects in.
+    items: List of object specs.
+    recompute: Whether to recompute the document at the end. Default True.
+```
+
+## `create_pattern`
+
+Source: `Parashell-Modules/Source/Bridge/tools/create_pattern.py`
+
+Signature:
+
+```python
+create_pattern(doc_name: str, source_object: str, kind: Literal['circular', 'linear', 'grid'], count: int, params: dict[str, Any] | None = None, copy_mode: Literal['duplicate', 'link'] = 'duplicate', name_prefix: str | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Place N copies of a source object in a circular, linear, or grid pattern.
+
+Pattern kinds and their params:
+
+  - "circular":
+      {"center": [x, y, z],          default [0, 0, 0]
+       "axis":   [x, y, z],          default [0, 0, 1]
+       "total_angle_deg": 360,       360 = full circle, e.g. 90 for quarter sweep
+       "full_circle": true,          when true, count divides 360 exactly
+       "include_first": true}        when false, first instance is skipped
+
+  - "linear":
+      {"direction": [x, y, z],       default [1, 0, 0]
+       "spacing": 50.0,              distance between adjacent copies in mm
+       "length": 200.0}              alternative to 'spacing': total span
+
+  - "grid":
+      {"u_axis": [1, 0, 0],          row direction
+       "v_axis": [0, 1, 0],          column direction
+       "cols": 4,                    columns per row
+       "rows": 3,                    number of rows
+       "spacing_x": 50,
+       "spacing_y": 50}              count is ignored when rows*cols is given
+
+copy_mode controls how the copies are produced:
+  - "duplicate": creates an independent Part::Feature for each copy with a
+    deep-copied shape. Best for permanent geometry like gear teeth, planet
+    arms, sun rays.
+  - "link": creates an App::Link to the source for each copy. Edits to the
+    source propagate to every copy. Best for orbital tracks or instances
+    that should share a master.
+
+Source can be referenced by name or take_snapshot uid.
+
+Args:
+    doc_name: Document containing the source.
+    source_object: Object name or uid.
+    kind: "circular", "linear", or "grid".
+    count: Number of copies. For circular full circles this becomes the
+           division count.
+    params: Pattern-specific params (see above).
+    copy_mode: "duplicate" or "link".
+    name_prefix: Optional prefix for new object names. Defaults to
+                 "<source>_<kind>_".
+    recompute: Whether to recompute after placement. Default True.
+```
+
+## `delete_object`
+
+Source: `Parashell-Modules/Source/Bridge/tools/delete_object.py`
+
+Signature:
+
+```python
+delete_object(doc_name: str, obj_name: str, transaction_id: str) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Delete an object from a Parashell document.
+
+Every model edit must run inside an open transaction. Pass the id from
+transaction_create; deletion is reversible via transaction_cancel until
+transaction_apply persists it.
+
+Args:
+    doc_name: The name of the document containing the object.
+    obj_name: The name of the object to delete.
+    transaction_id: Id of the open transaction returned by transaction_create.
+```
+
+## `edit_object`
+
+Source: `Parashell-Modules/Source/Bridge/tools/edit_object.py`
+
+Signature:
+
+```python
+edit_object(doc_name: str, obj_name: str, obj_properties: dict[str, Any], transaction_id: str) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Edit an object in Parashell.
+
+Every model edit must run inside an open transaction. Pass the id from
+transaction_create; the change is rolled back by transaction_cancel or
+persisted by transaction_apply.
+
+Args:
+    doc_name: The name of the document containing the object.
+    obj_name: The name of the object to edit.
+    obj_properties: The properties to update on the object.
+    transaction_id: Id of the open transaction returned by transaction_create.
+```
+
+## `get_parts_list`
+
+Source: `Parashell-Modules/Source/Bridge/tools/get_parts_list.py`
+
+Signature:
+
+```python
+get_parts_list() -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Get the list of parts available in the Parashell parts library addon.
+```
+
+## `insert_part_from_library`
+
+Source: `Parashell-Modules/Source/Bridge/tools/insert_part_from_library.py`
+
+Signature:
+
+```python
+insert_part_from_library(relative_path: str, transaction_id: str) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Insert a part from the Parashell parts library addon.
+
+Every model edit must run inside an open transaction. Pass the id from
+transaction_create; persist with transaction_apply or roll back with
+transaction_cancel.
+
+Args:
+    relative_path: Relative path of the part within the parts library directory.
+    transaction_id: Id of the open transaction returned by transaction_create.
+```
+
+## `list_documents`
+
+Source: `Parashell-Modules/Source/Bridge/tools/list_documents.py`
+
+Signature:
+
+```python
+list_documents() -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Get the list of currently open documents in Parashell.
+```
+
+## `recompute_document`
+
+Source: `Parashell-Modules/Source/Bridge/tools/recompute_document.py`
+
+Signature:
+
+```python
+recompute_document(doc_name: str | None = None, force: bool = False, clear_redo: bool = False) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Recompute one or all open Parashell documents.
+
+Re-evaluates parametric features and dependency graphs. Useful after editing
+properties or geometry through execute_code or other tools where a recompute
+has not been triggered automatically.
+
+The response includes per-document health: how many objects were recomputed,
+how many remain unhealthy after the pass, and the full health record for each
+unhealthy object - including state flags, must_execute, and shape diagnostics
+(is_null, is_valid, is_closed, volume, area, vertex/edge/face/solid counts,
+and bounding box). Use check_objects for an on-demand scan that does not
+trigger a recompute.
+
+Args:
+    doc_name: Document name to recompute. If omitted, recomputes every open document.
+    force: Pass True to recompute every object regardless of touched state.
+    clear_redo: Pass True to clear the document's undo/redo stack before recomputing.
+```
+
+## `remove_from_group`
+
+Source: `Parashell-Modules/Source/Bridge/tools/remove_from_group.py`
+
+Signature:
+
+```python
+remove_from_group(doc_name: str, group: str, members: list[str]) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Remove objects from a group without deleting them.
+
+Args:
+    doc_name: Document containing the objects.
+    group: Group name or uid.
+    members: List of object names / uids to remove from the group.
+```
+
+## `set_appearance`
+
+Source: `Parashell-Modules/Source/Bridge/tools/set_appearance.py`
+
+Signature:
+
+```python
+set_appearance(doc_name: str, targets: list[str], properties: dict[str, Any]) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+Apply a single set of ViewObject properties to many objects at once.
+
+Replaces the per-object setattr loop for ShapeColor / Transparency /
+Visibility / DisplayMode. Targets accept object names or take_snapshot uids.
+
+Recognised properties:
+  - ShapeColor / LineColor / PointColor: [r, g, b] or [r, g, b, a] in [0, 1].
+  - Transparency: int 0..100.
+  - LineWidth: float.
+  - PointSize: float.
+  - Visibility: bool.
+  - DisplayMode: "Shaded", "Wireframe", "Flat Lines", "Hidden line", "Points", "As is".
+  - Any other ViewObject property exposed by the underlying object - set
+    verbatim if it exists, otherwise reported in 'errors'.
+
+Args:
+    doc_name: Document containing the targets.
+    targets: List of object names or uids.
+    properties: Dict of view properties to apply to every target.
+```

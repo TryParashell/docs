@@ -1,0 +1,74 @@
+---
+title: "API coverage"
+description: "Coverage guarantees for Parashell MCP tools and the FreeCAD-compatible Python API"
+---
+
+This page is the coverage contract for agent retrieval.
+
+## Exhaustive in these docs
+
+The MCP tool reference is exhaustive for the current bridge source in this repository:
+
+```text
+Source directory: Parashell-Modules/Source/Bridge/tools
+Registration form: @mcp.tool()
+Documented tools: 95
+Index: /agent/tools
+```
+
+Every registered MCP tool has:
+
+- tool name
+- signature excluding injected `ctx`
+- source file
+- full descriptor/docstring
+- category page
+
+If a task can be expressed with these tools, use the MCP tool reference as authoritative.
+
+## Not statically exhaustive in these docs
+
+The FreeCAD-compatible Python API is exposed by a mixture of Python modules, compiled extension modules, document object TypeIds, workbench modules, and object properties that can vary by build, loaded workbench, document object, and optional module availability.
+
+Therefore, this docs set does not claim to be a complete static dump of every callable Python symbol in the active Parashell process. A static dump generated outside the Parashell interpreter would be incomplete for compiled bindings and misleading for dynamically registered object properties.
+
+## Complete discovery rule
+
+When an agent needs an API not present in the curated module map, it must discover it in the active Parashell build by executing a small, read-only introspection snippet through `execute_code` inside an open transaction.
+
+Use:
+
+- `dir(module)` for module symbols
+- `help(symbol)` only when output size is acceptable
+- `obj.PropertiesList` for editable object properties
+- `obj.TypeId` for exact object type
+- `obj.getTypeIdOfProperty(name)` when available
+- `obj.getGroupOfProperty(name)` when available
+- `obj.getDocumentationOfProperty(name)` when available
+- `doc.supportedTypes()` when available
+- `FreeCAD.getAllDerivedFrom(type_id)` when available
+
+See [Runtime introspection](/agent/runtime-introspection).
+
+## Agent decision tree
+
+1. Prefer MCP tool reference for all bridge-exposed actions.
+2. If Python is required, check [Compatible modules](/agent/compatible-modules), [Python API](/agent/python-api), and [TypeIds and properties](/agent/typeids-properties).
+3. If a symbol/property remains unknown, run a read-only introspection snippet in Parashell.
+4. Use the discovered exact property or method.
+5. Recompute, render, and validate after mutation.
+
+## Documentation coverage classes
+
+```text
+Class A: Exhaustive source-derived MCP tools.
+Class B: Curated FreeCAD-compatible Python API map.
+Class C: Runtime-discovered compiled bindings and dynamic object properties.
+Class D: Optional workbench APIs; must be imported defensively and verified before use.
+```
+
+Agents must not hallucinate Class C or D symbols. Discover them or avoid them.
+
+## Mutation safety
+
+Runtime introspection must be read-only unless the current task already requires mutation. If an introspection snippet uses `execute_code`, still pass a transaction id because the tool contract requires it; cancel the transaction afterward if no mutation is intended.

@@ -1,0 +1,215 @@
+---
+title: "Python syntax"
+description: "Allowed Python syntax and execution envelope for Parashell execute_code"
+---
+
+`execute_code` runs Python inside Parashell's FreeCAD-compatible interpreter. The snippet is not shell code. It is not a package manager. It is not a general automation sandbox.
+
+## Allowed imports
+
+Prefer only modules native to the CAD environment and the Python standard library for simple math/data handling:
+
+```python
+import FreeCAD
+import FreeCADGui
+import Part
+import Sketcher
+import Draft
+import Mesh
+import TechDraw
+import Spreadsheet
+import math
+from math import sin, cos, radians
+```
+
+Use optional workbench modules only when installed:
+
+```python
+try:
+    import Arch
+except Exception:
+    Arch = None
+```
+
+Do not import network, shell, package installation, or broad filesystem modules for modeling snippets.
+
+## Forbidden forms
+
+Do not use these in `execute_code`:
+
+```python
+import os
+import subprocess
+import socket
+import urllib.request
+import requests
+import pathlib
+open("/outside/workspace", "w")
+eval(user_text)
+exec(user_text)
+__import__(user_text)
+```
+
+Allowed file interaction is limited to Parashell document save/export APIs or explicit export paths requested by the user.
+
+## Literals
+
+```python
+name = "Bracket"
+count = 6
+diameter = 12.5
+enabled = True
+missing = None
+point = (0.0, 0.0, 0.0)
+items = ["BoltA", "BoltB"]
+props = {"Length": 40, "Width": 20}
+```
+
+## Flow control
+
+```python
+if doc is None:
+    doc = FreeCAD.newDocument("Model")
+else:
+    doc.recompute()
+
+for obj in doc.Objects:
+    if hasattr(obj, "Shape") and not obj.Shape.isNull():
+        pass
+
+while False:
+    pass
+```
+
+Avoid unbounded loops. Iteration counts must be small and deterministic.
+
+## Functions
+
+Use local helper functions to remove repetition when the snippet remains short:
+
+```python
+def vec(x, y, z=0):
+    return FreeCAD.Vector(float(x), float(y), float(z))
+
+base = vec(0, 0, 0)
+```
+
+Do not define large frameworks, persistent hooks, background timers, monkey patches, or module-level state intended to survive the operation.
+
+## Exceptions
+
+Catch expected modeling failures and return a useful error. Do not swallow all failures silently.
+
+```python
+try:
+    doc.recompute()
+except Exception as exc:
+    raise RuntimeError(f"recompute failed: {exc}")
+```
+
+## Comprehensions
+
+```python
+solid_names = [
+    obj.Name
+    for obj in doc.Objects
+    if hasattr(obj, "Shape") and obj.Shape is not None and not obj.Shape.isNull()
+]
+```
+
+Keep comprehensions readable. Prefer ordinary loops when side effects are involved.
+
+## Attribute and property syntax
+
+```python
+obj.Length = 40
+obj.Width = 20
+obj.Height = 10
+obj.Label = "Base plate"
+obj.ViewObject.Visibility = True
+obj.ViewObject.ShapeColor = (0.8, 0.8, 0.8, 1.0)
+```
+
+Check property existence when assigning uncommon fields:
+
+```python
+if "Length" in obj.PropertiesList:
+    obj.Length = 40
+```
+
+## Expressions
+
+Use expressions to bind feature dimensions to spreadsheet aliases:
+
+```python
+pad.Length = 1
+pad.setExpression("Length", "Spreadsheet.PlateThickness")
+```
+
+Avoid hard-coding driving dimensions when a spreadsheet variable should control the model.
+
+## Minimal snippet structure
+
+```python
+import FreeCAD
+import Part
+
+doc = FreeCAD.ActiveDocument
+if doc is None:
+    doc = FreeCAD.newDocument("Model")
+
+obj = doc.addObject("Part::Box", "Block")
+obj.Length = 40
+obj.Width = 20
+obj.Height = 10
+
+doc.recompute()
+```
+
+## Minimal parametric snippet structure
+
+```python
+import FreeCAD
+import Sketcher
+import Part
+
+doc = FreeCAD.ActiveDocument
+if doc is None:
+    doc = FreeCAD.newDocument("Model")
+
+sheet = doc.addObject("Spreadsheet::Sheet", "Spreadsheet")
+sheet.set("A1", "Length")
+sheet.set("B1", "40 mm")
+sheet.setAlias("B1", "Length")
+sheet.set("A2", "Width")
+sheet.set("B2", "20 mm")
+sheet.setAlias("B2", "Width")
+sheet.set("A3", "Thickness")
+sheet.set("B3", "6 mm")
+sheet.setAlias("B3", "Thickness")
+
+body = doc.addObject("PartDesign::Body", "PlateBody")
+sketch = body.newObject("Sketcher::SketchObject", "PlateSketch")
+sketch.addGeometry(Part.LineSegment(FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(40, 0, 0)), False)
+sketch.addGeometry(Part.LineSegment(FreeCAD.Vector(40, 0, 0), FreeCAD.Vector(40, 20, 0)), False)
+sketch.addGeometry(Part.LineSegment(FreeCAD.Vector(40, 20, 0), FreeCAD.Vector(0, 20, 0)), False)
+sketch.addGeometry(Part.LineSegment(FreeCAD.Vector(0, 20, 0), FreeCAD.Vector(0, 0, 0)), False)
+sketch.addConstraint(Sketcher.Constraint("Coincident", 0, 2, 1, 1))
+sketch.addConstraint(Sketcher.Constraint("Coincident", 1, 2, 2, 1))
+sketch.addConstraint(Sketcher.Constraint("Coincident", 2, 2, 3, 1))
+sketch.addConstraint(Sketcher.Constraint("Coincident", 3, 2, 0, 1))
+sketch.addConstraint(Sketcher.Constraint("Horizontal", 0))
+sketch.addConstraint(Sketcher.Constraint("Vertical", 1))
+sketch.addConstraint(Sketcher.Constraint("DistanceX", 0, 1, 0, 2, 40))
+sketch.addConstraint(Sketcher.Constraint("DistanceY", 1, 1, 1, 2, 20))
+
+pad = body.newObject("PartDesign::Pad", "PlatePad")
+pad.Profile = sketch
+pad.Length = 6
+pad.setExpression("Length", "Spreadsheet.Thickness")
+body.Tip = pad
+
+doc.recompute()
+```
+
+When possible, use the structured MCP sketch and spreadsheet tools instead of writing this by hand.

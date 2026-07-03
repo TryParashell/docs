@@ -1,0 +1,269 @@
+---
+title: "Schemas"
+description: "Shared Parashell MCP JSON schemas for selectors, vectors, placements, objects, sketches, spreadsheets, and view calls"
+---
+
+Use these schemas when constructing MCP arguments. Function-specific parameters are documented in the tool pages.
+
+## Target selectors
+
+Most tools accept any of these target forms:
+
+```json
+"Bracket"
+"obj_2a9f4c..."
+"Bracket#Face3"
+"Bracket#Edge2"
+"sub_d8f1..."
+```
+
+- Plain object names resolve through the document.
+- Snapshot uids come from `take_snapshot`.
+- Subelement refs use `Object#FaceN`, `Object#EdgeN`, `Object#VertexN`, `Object#SolidN`, or a `sub_...` uid.
+- When names collide or labels differ from internal names, prefer snapshot uid.
+
+## Vector
+
+Accepted vector forms:
+
+```json
+[10, 20, 0]
+{"x": 10, "y": 20, "z": 0}
+```
+
+Two-component lists are interpreted as `z=0`. Use millimeter-scale coordinates unless the document explicitly uses another unit convention.
+
+## Placement
+
+```json
+{
+  "Base": {"x": 10, "y": 0, "z": 5},
+  "Rotation": {
+    "Axis": {"x": 0, "y": 0, "z": 1},
+    "Angle": 45
+  }
+}
+```
+
+Alternate base key:
+
+```json
+{"Position": {"x": 0, "y": 0, "z": 0}}
+```
+
+Alternate rotation key set:
+
+```json
+{"Rotation": {"yaw": 0, "pitch": 0, "roll": 90}}
+```
+
+The axis-angle `Angle` is degrees in MCP property dictionaries. Native Python `FreeCAD.Rotation` accepts constructor forms documented in [Python API](/agent/python-api).
+
+## Object spec
+
+Used by `create_objects` and mirrored by `create_object` arguments.
+
+```json
+{
+  "Name": "Rib001",
+  "Type": "Part::Box",
+  "Properties": {
+    "Length": 40,
+    "Width": 8,
+    "Height": 16,
+    "Placement": {
+      "Base": {"x": 0, "y": 0, "z": 0},
+      "Rotation": {"Axis": {"x": 0, "y": 0, "z": 1}, "Angle": 0}
+    },
+    "ViewObject": {
+      "ShapeColor": [0.8, 0.8, 0.8, 1.0],
+      "Transparency": 0
+    }
+  },
+  "Analysis": null
+}
+```
+
+Property assignment rules:
+
+- If a property exists in `PropertiesList`, it is assigned directly.
+- `Placement` dict becomes a placement object.
+- Vector-valued properties accept vector dicts.
+- `Base`, `Tool`, `Source`, and `Profile` can reference another object by name.
+- `References` accepts a list of `[object_name, subelement]` pairs.
+- `ViewObject` applies visual properties such as `ShapeColor`, `Transparency`, `Visibility`, `DisplayMode`, `LineColor`, `LineWidth`, `PointColor`, and `PointSize`.
+
+## Common TypeIds
+
+```text
+App::DocumentObjectGroup
+App::Part
+Part::Feature
+Part::Box
+Part::Cylinder
+Part::Sphere
+Part::Cone
+Part::Torus
+Part::Fuse
+Part::Cut
+Part::Common
+PartDesign::Body
+PartDesign::Pad
+PartDesign::Pocket
+PartDesign::Revolution
+PartDesign::Fillet
+PartDesign::Chamfer
+Sketcher::SketchObject
+Spreadsheet::Sheet
+TechDraw::DrawPage
+TechDraw::DrawViewPart
+Fem::FemAnalysis
+```
+
+Check an object's exact writable properties with `get_object` before assigning uncommon fields.
+
+## Sketch geometry entries
+
+Used by `edit_sketch_geometry` and `make_sketch_extrude.profile`.
+
+```json
+{"type": "LineSegment", "start": [0, 0], "end": [20, 0], "construction": false}
+{"type": "Circle", "center": [10, 10], "radius": 5}
+{"type": "ArcOfCircle", "center": [0, 0], "radius": 10, "start_angle": 0, "end_angle": 90, "angle_unit": "deg"}
+{"type": "Point", "position": [0, 0]}
+{"type": "Ellipse", "center": [0, 0], "major_radius": 12, "minor_radius": 6, "major_axis_direction": [1, 0, 0]}
+```
+
+Position ids used by constraints:
+
+```text
+0 none/edge
+1 start
+2 end
+3 center
+```
+
+Position names accepted: `none`, `any`, `curve`, `edge`, `start`, `first`, `begin`, `end`, `last`, `center`, `mid`, `midpoint`.
+
+## Sketch constraints
+
+Each entry must include `type`. `name` is optional. Dimensional constraints accept `driving: false` to create a reference constraint.
+
+```json
+{"type": "Coincident", "first": 0, "first_pos": "end", "second": 1, "second_pos": "start"}
+{"type": "Horizontal", "first": 0}
+{"type": "Vertical", "first": 1}
+{"type": "Equal", "first": 0, "second": 2}
+{"type": "Parallel", "first": 0, "second": 2}
+{"type": "Perpendicular", "first": 0, "second": 1}
+{"type": "Tangent", "first": 2, "second": 3}
+{"type": "Distance", "first": 0, "value": 25}
+{"type": "DistanceX", "first": 0, "first_pos": "start", "second": 0, "second_pos": "end", "value": 40}
+{"type": "DistanceY", "first": 1, "value": 20}
+{"type": "Radius", "first": 2, "value": 8}
+{"type": "Diameter", "first": 2, "value": 16}
+{"type": "Angle", "first": 0, "second": 1, "value": 45, "angle_unit": "deg"}
+{"type": "PointOnObject", "first": 3, "first_pos": "start", "second": -1}
+{"type": "Symmetric", "first": 0, "first_pos": "start", "second": 0, "second_pos": "end", "third": -2}
+{"type": "Block", "first": 0}
+```
+
+Sketch axes use `-1` for sketch X axis, `-2` for sketch Y axis, and `-3` for origin where supported by the constraint.
+
+## Spreadsheet cell maps
+
+Write cells:
+
+```json
+{
+  "A1": "Length",
+  "B1": "40 mm",
+  "A2": "Width",
+  "B2": "20 mm",
+  "A3": "WallThickness",
+  "B3": "2.5 mm"
+}
+```
+
+Aliases:
+
+```json
+{
+  "B1": "Length",
+  "B2": "Width",
+  "B3": "WallThickness"
+}
+```
+
+Ranges:
+
+```json
+"A1:C10"
+["A1", "B2:B8", "D4"]
+```
+
+Style:
+
+```json
+{
+  "targets": ["A1:B3"],
+  "style": ["bold"],
+  "foreground": [0.1, 0.1, 0.1],
+  "background": [0.9, 0.95, 1.0],
+  "alignment": ["center"],
+  "display_unit": "mm",
+  "style_options": "replace"
+}
+```
+
+## View call controls
+
+Standard views:
+
+```text
+Isometric, Front, Top, Right, Back, Left, Bottom, Dimetric, Trimetric
+```
+
+Display modes:
+
+```text
+Shaded, Wireframe, Flat Lines, Hidden line, Points, As is
+```
+
+Camera modes:
+
+```text
+Perspective, Orthographic
+```
+
+Highlight colors use RGB floats:
+
+```json
+[1.0, 0.4, 0.0]
+```
+
+## Measurement endpoints
+
+`measure_distance` accepts object names, uids, subelement refs, or points:
+
+```json
+{"object": "Bracket", "subelement": "Face3"}
+{"x": 0, "y": 0, "z": 0}
+[10, 0, 0]
+"Bracket#Edge2"
+```
+
+## Builder parameter packets
+
+High-level builder tools expose positional arguments directly. Their internal `params` equivalent is:
+
+```json
+{
+  "placement": {
+    "Base": {"x": 0, "y": 0, "z": 0},
+    "Rotation": {"Axis": {"x": 0, "y": 0, "z": 1}, "Angle": 0}
+  }
+}
+```
+
+Shape-specific keys are documented in [Geometry builder tools](/agent/tools/geometry-builders).

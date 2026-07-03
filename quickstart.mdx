@@ -1,47 +1,48 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Agent quickstart"
+description: "Minimal sequence for a Parashell MCP agent"
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
+Use this sequence when a new agent session starts or when context is stale.
 
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
+## First calls
 
-## Prerequisites
+1. Call `list_documents` if the active document name is unknown.
+2. Call `get_world_state` with `include_feature_tree=true` and `include_geometry=true`.
+3. If target identity is ambiguous, call `take_snapshot` and use `uid`, object name, or `Object#FaceN` selectors in later calls.
+4. If the task changes geometry or data and the chosen tool accepts `transaction_id`, open a transaction with `transaction_create`.
+5. Mutate with the narrowest typed tool. Use `execute_code` only when no typed MCP tool covers the operation.
+6. Recompute or rely on the tool's recompute option.
+7. Inspect with `get_world_state` and render with `get_view` or `get_ortho`.
+8. Validate with `check_objects`, `check_geometry`, `verify_solid`, or `validate_document`.
+9. Apply or cancel the transaction. Report object names, dimensions, validation status, and any residual uncertainty.
 
-Before you begin, you must have:
+## Minimal mutation template
 
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
+```text
+get_world_state(doc_name?, include_feature_tree=true, include_geometry=true)
+transaction_create(doc_name, label, reason)
+create_object/edit_object/delete_object/insert_part_from_library/execute_code(..., transaction_id)
+transaction_plan(transaction_id)
+transaction_apply(transaction_id)
+get_ortho(focus_object?, display_mode?)
+validate_document(doc_name, deep_geometry=true, run_bop_check=true)
+```
 
-## Get started
+## Minimal Python template
 
-<Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+```python
+import FreeCAD
+import Part
 
-    ```bash
-    npm install your-package
-    ```
-  </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
+doc = FreeCAD.ActiveDocument
+if doc is None:
+    doc = FreeCAD.newDocument("Model")
+obj = doc.addObject("Part::Box", "ReferenceBlock")
+obj.Length = 40
+obj.Width = 20
+obj.Height = 10
+doc.recompute()
+```
 
-    ```bash
-    your-cli init
-    ```
-  </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
-
-    ```bash
-    your-cli start
-    ```
-  </Step>
-</Steps>
-
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
-
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
-</Tip>
+Use this only as a syntax pattern. For production modeling, drive dimensions through a Spreadsheet, expressions, and parametric features.

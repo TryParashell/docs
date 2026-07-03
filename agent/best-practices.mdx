@@ -1,0 +1,258 @@
+---
+title: "Best practices"
+description: "Code-derived Parashell agent practices for the FreeCAD-compatible API"
+---
+
+This page is agent-facing operating guidance derived only from files under `/Parashell` in this repository. Treat it as a source-grounded practice layer over the API references, not as an external manual.
+
+Initial focused source files:
+
+```text
+Parashell/src/App/DocumentPyImp.cpp
+Parashell/src/App/DocumentObjectPyImp.cpp
+Parashell/src/App/PropertyContainerPyImp.cpp
+Parashell/src/App/Expression.cpp
+Parashell/src/Mod/Test/Document.py
+Parashell/src/Mod/Test/Recompute.py
+Parashell/src/Mod/Test/TestRubberbandSelection.py
+Parashell/src/Mod/Spreadsheet/TestSpreadsheet.py
+Parashell/src/Mod/Draft/Draft.py
+Parashell/src/Mod/BIM/Arch.py
+Parashell/src/Mod/TechDraw/TDTest/TechDrawTestUtilities.py
+Parashell/src/Mod/TechDraw/TDTest/DrawViewDimensionTest.py
+```
+
+The later all-file scan is recorded in [Source scan coverage](/agent/source-scan-coverage). Dense generated callable references are in [Python reference: core stubs](/agent/python-reference-core), [Python reference: modeling stubs](/agent/python-reference-modeling), [Python reference: workbench stubs](/agent/python-reference-workbenches), and [Python source symbols](/agent/python-source-symbols).
+
+## Document lifecycle
+
+- Resolve the active document explicitly. If a task may run in an empty process, create a document with `FreeCAD.newDocument(...)`.
+- Close temporary documents with `FreeCAD.closeDocument(doc.Name)` or `FreeCAD.closeDocument("Name")` in cleanup paths.
+- Use internal `Name` for programmatic lookup and durable object references. Use `Label` for human-facing naming and expression label references only when the expression syntax explicitly requires it.
+- Use `doc.getObject(name_or_id)` when the exact internal name or numeric id is known.
+- Use `doc.findObjects(Type="...", Name="...", Label="...")` for filtered discovery.
+- Use `doc.getObjectsByLabel(label)` only when label-based ambiguity is acceptable or expected.
+- Use `doc.supportedTypes()` before constructing optional or workbench-dependent TypeIds. `Part::Feature` creation in tests is guarded this way and falls back to `Part.show(shape, name)` when needed.
+- Prefer `doc.Objects`, `doc.RootObjects`, and `doc.TopologicalSortedObjects` for inventory or dependency-sensitive traversal.
+
+## Transactions
+
+- Wrap coherent document mutation in a transaction:
+
+```python
+doc.openTransaction("create parametric bracket")
+try:
+    body = doc.addObject("PartDesign::Body", "Body")
+    # mutate document
+    doc.commitTransaction()
+except Exception:
+    doc.abortTransaction()
+    raise
+```
+
+- Use transaction labels that identify the modeling intent, not implementation trivia.
+- Treat document transactions as potentially application-scoped. The source-adjacent `Document.pyi` stub documents `openTransaction(name)` as routing through `FreeCAD.setActiveTransaction(name)`, and multi-document changes can share one internal transaction id.
+- Commit only after all properties and links in that logical edit are assigned.
+- Abort on exceptions before retrying with a different strategy.
+- Use `doc.hasPendingTransaction` when recovery logic needs to know whether abort/commit is valid.
+- `doc.undo()`, `doc.redo()`, `doc.clearUndos()`, and `doc.clearDocument()` exist, but agents should not use them as primary modeling operations. Use them for explicit rollback workflows or tests.
+- Use `FreeCAD.getActiveTransaction()` and `FreeCAD.closeActiveTransaction(abort=False, id=0)` when coordinating application-level transaction state directly.
+
+## Recompute discipline
+
+- Recompute after creating geometry, setting expressions, changing spreadsheet cells, adding TechDraw views, or changing parameter objects.
+- `doc.recompute()` returns an object count. Capture it when the task needs to know whether a mutation actually propagated.
+- `doc.recompute([obj1, obj2])` is supported. Use targeted recompute for parameter propagation tests or narrow dependency updates, then validate downstream state.
+- `doc.recompute(objects, force, checkCycle)` accepts `force` and `checkCycle` booleans at the binding layer. Use cycle checking when generating or modifying expression graphs.
+- Use object state as a dependency signal. The code tests `"Touched" in obj.State` and `"Up-to-date" in dimension.State`.
+- `obj.recompute(recursive=False)` recomputes a feature and returns a boolean. Prefer document recompute for normal modeling because document dependencies are broader.
+- `obj.isValid()` is available for object validity checks; shape-specific validation still requires shape inspection.
+
+## Expressions
+
+- Use `obj.setExpression(path, expr)` with `expr` as a string.
+- Use `obj.setExpression(path, None)` or `obj.clearExpression(path)` to remove an expression. Do not overwrite with an empty string unless the target API explicitly documents that behavior.
+- Use `obj.getExpression(path)` when checking current bindings.
+- Expression changes create dependency edges. Validate expected propagation by recomputing and checking touched state or driven property values.
+- Use `hiddenref(...)` only when the dependency is intentionally hidden from normal object link tracking. Source tests show that `hiddenref(VarSet.Length)` removes ordinary `InList`, `OutList`, and property edge visibility while still allowing expression evaluation. This is a specialized dependency tool, not a default reference form.
+- Use `setPropertyStatus(name, "Output")` for computed output properties and `setPropertyStatus(name, ["Input"])` for input properties that should participate in fine-grained dependency behavior.
+
+## Parameter objects
+
+- Use `App::VarSet` for compact named parameters when a full spreadsheet is unnecessary.
+
+```python
+var_set = doc.addObject("App::VarSet", "VarSet")
+var_set.addProperty("App::PropertyLength", "Length", "Params")
+var_set.Length = "20.0 mm"
+box.setExpression("Length", "VarSet.Length")
+doc.recompute()
+```
+
+- Use explicit property types such as `App::PropertyLength`, `App::PropertyInteger`, `App::PropertyBool`, `App::PropertyString`, and `App::PropertyEnumeration`.
+- Put parameter properties in a stable group such as `"Params"` so later introspection can distinguish design inputs from incidental object properties.
+- Use `FreeCAD.Units.Quantity("32.0 mm")` or string quantities like `"20 mm"` for dimensional values. Do not rely on unitless floats for dimensions unless the target property semantics are known.
+
+## Property introspection
+
+- Query `obj.PropertiesList` before assigning uncommon properties.
+- Use `obj.getPropertyByName(name, checkOwner)` when direct attribute access could cross a link boundary. `checkOwner=1` requires local ownership; `checkOwner=2` returns owner plus value.
+- Query `obj.getTypeIdOfProperty(name)` before coercing values for dynamic or unfamiliar properties.
+- Query `obj.getGroupOfProperty(name)` to distinguish design inputs, outputs, and implementation groups.
+- Query `obj.getDocumentationOfProperty(name)` when an agent needs the property intent.
+- Respect property status. The binding exposes status concepts including `Output`, `Input`, `NoRecompute`, `NoPersist`, `ReadOnly`, and `Hidden`.
+- Use negative status values or text prefixed with `-` only when intentionally clearing property status.
+- For Python feature objects, add properties before assigning values, set status before depending on the property, and implement `execute(obj)` to update shape/output properties.
+
+## Sketch and PartDesign
+
+- For PartDesign profiles, create a `PartDesign::Body`, then create the sketch with `body.newObject("Sketcher::SketchObject", "Sketch")`.
+- Attach sketches to origin planes when constructing base profiles:
+
+```python
+sketch.AttachmentSupport = (doc.Origin, ["XY_Plane"])
+sketch.MapMode = "FlatFace"
+```
+
+- Use `Part.LineSegment(FreeCAD.Vector(...), FreeCAD.Vector(...))` and other Part geometry constructors for sketch geometry.
+- Batch-add geometry and constraints where possible:
+
+```python
+sketch.addGeometry(geo_list, False)
+sketch.addConstraint(constraint_list)
+```
+
+- Set sketch dimensions through constraints and datum values, not by leaving underconstrained raw geometry:
+
+```python
+sketch.setDatum(10, FreeCAD.Units.Quantity("32.0 mm"))
+```
+
+- Use `sketch.setGeometryIds(...)` when the model expects stable geometry ids.
+- For pads, assign `pad.Profile = sketch`, set length with an explicit unit, and set `pad.ReferenceAxis` when the source pattern requires an axis.
+- Recompute the document after constructing the profile before measuring `body.Shape` or downstream feature output.
+- Validate parametric sketch updates by changing the driving parameter, recomputing, and checking dimensions through `body.Shape.BoundBox`.
+
+## Shape validation
+
+- Validate created or modified solids by checking the object shape, not just object existence.
+- Use `obj.Shape.BoundBox` for dimensional assertions and screen-space selection setup.
+- Use shape validity/null checks when available for the shape type. Pair them with recompute and measurable shape assertions.
+- Use `Shape.Volume`, `BoundBox.XLength`, `BoundBox.YLength`, and `BoundBox.ZLength` for coarse geometry sanity checks after recompute.
+- For boolean or generated Part shapes, assign the resulting shape to a `Part::Feature` only after confirming the target TypeId is available.
+- Do not treat a successful `addObject` call as proof that recompute produced valid geometry.
+
+## Spreadsheet practices
+
+- Create sheets with `doc.addObject("Spreadsheet::Sheet", "Spreadsheet")`.
+- Set cells with `sheet.set(cell, value_or_formula)`, then recompute before reading calculated attributes or dependent geometry.
+- Use aliases for stable parametric references:
+
+```python
+sheet.set("A1", "Length")
+sheet.set("B1", "40 mm")
+sheet.setAlias("B1", "Length")
+box.setExpression("Length", "Spreadsheet.Length")
+doc.recompute()
+```
+
+- Alias names must be unique, must not be cell addresses, and must not collide with units or reserved words. Duplicate and invalid aliases are expected to fail.
+- Clear an alias with `sheet.setAlias("A1", "")`; `sheet.getAlias("A1")` should then return `None`.
+- Renaming an alias updates formulas and expression-engine bindings. After rename, inspect `sheet.getContents(cell)` or `obj.ExpressionEngine` if correctness depends on the rewritten reference.
+- Use label-qualified references such as `<<Spreadsheet>>.Length` when the expression needs object label semantics. If the label changes, verify the expression engine rewrites to the new label form.
+- Insert/remove rows and columns can move aliases and formulas. Recompute and inspect aliases after structural edits.
+- Wrap alias creation in transactions when undo/reuse behavior matters.
+- Cross-document expressions require saved documents. The tests save, reopen, then validate cross-document links. Do not assume unsaved document names are durable references.
+- Spreadsheet formulas support units, ranges, aggregate functions, conditionals, vector/matrix/rotation/placement constructors, and aliases. Validate units because range aggregation with mixed units returns error strings.
+- Use `.cells.Bind...` and `.cells.BindHiddenRef...` expression paths only when binding spreadsheet cell regions intentionally. Clear with `setExpression(path, None)`.
+
+## Draft API
+
+- The Draft public programming interface is designed so its creation/manipulation functions are usable without requiring the graphical user interface.
+- Use Draft for 2D construction objects, cleanup, transforms, wires, arrays, SVG/DXF extraction, and object type utilities.
+- Prefer public constructors and functions exported by `Draft.py`, including `make_line`, `make_wire`, `make_circle`, `make_rectangle`, `make_polygon`, `array`, `move`, `rotate`, `scale`, `offset`, `mirror`, `upgrade`, `downgrade`, `join_wires`, `split`, `fuse`, `cut`, `extrude`, `heal`, `draftify`, `shapify`, `get_type`, `get_objects_of_type`, `get_svg`, and `get_dxf`.
+- Guard GUI-dependent helpers with `FreeCAD.GuiUp`. Selection, style, active view, and viewprovider helpers are not headless-safe by default.
+- Recompute after Draft object creation or transform operations before measuring geometry or exporting downstream artifacts.
+
+## BIM and architectural API
+
+- Guard active-document assumptions. Source constructors abort or return when no active document exists for active-document-only APIs.
+- Creation functions typically return the created object. Capture that return value and continue mutating that object directly.
+- FeaturePython patterns create an object, assign a proxy, optionally assign a viewprovider only when `FreeCAD.GuiUp`, set domain properties, recompute, and return the object.
+- Normalize single-object/list inputs before adding them to container objects. `makeAxisSystem` coerces one axis to a list; building-part helpers accept both one object and a sequence.
+- Set domain metadata explicitly, for example `IfcType` and `CompositionType`, after object creation.
+- Do not assume BIM object creation recomputes in every helper. Some helpers recompute immediately; others return after assigning properties. Recompute before validation.
+
+## TechDraw
+
+- Create a page and template before views:
+
+```python
+page = doc.addObject("TechDraw::DrawPage", "Page")
+template = doc.addObject("TechDraw::DrawSVGTemplate", "Template")
+template.Template = template_file
+page.Template = template
+```
+
+- Add views to the page with `page.addView(view)` before final validation.
+- Use list form for sources where the API expects it:
+
+```python
+view = doc.addObject("TechDraw::DrawViewPart", "View")
+page.addView(view)
+view.Source = [doc.Box]
+view.X = 30
+view.Y = 150
+doc.recompute()
+```
+
+- For Draft views, use `TechDraw::DrawViewDraft`, set `Source`, set `Direction`, add to the page, then recompute.
+- For dimensions, create `TechDraw::DrawViewDimension`, add it to the page, set `Type`, set `References2D`, then recompute.
+- Verify drawing state with `"Up-to-date" in dimension.State` or equivalent view/page state checks before reporting a drawing as current.
+- Rendering or page inspection should happen after recompute, not immediately after object creation.
+
+## GUI boundaries
+
+- Always check `FreeCAD.GuiUp` before importing GUI modules, assigning viewproviders, updating views, or using selection/viewport APIs.
+- Headless agent snippets should avoid GUI-only state. If the task needs rendered confirmation through GUI APIs, only run that path after `FreeCAD.GuiUp` is true.
+- When GUI selection tests create geometry, they recompute, refresh the view, and only then inspect projected bounds. Follow the same order for viewport-dependent workflows.
+
+## Python feature objects
+
+- Use `Part::FeaturePython` or `App::FeaturePython` when the object needs a Python proxy.
+- Proxy setup pattern:
+
+```python
+class ParametricBox:
+    def __init__(self, obj):
+        obj.Proxy = self
+        obj.addProperty("App::PropertyLength", "Length", "Params")
+        obj.addProperty("App::PropertyLength", "DoubleLength", "Output")
+        obj.setPropertyStatus("DoubleLength", "Output")
+        obj.Length = "10 mm"
+
+    def execute(self, obj):
+        length = float(obj.Length)
+        obj.Shape = Part.makeBox(length, length, length)
+        obj.DoubleLength = f"{length * 2} mm"
+
+    def onChanged(self, obj, prop):
+        if prop == "Length":
+            self.execute(obj)
+```
+
+- Keep output properties marked as output so expression dependencies can distinguish generated values from design inputs.
+- If `onChanged` eagerly recomputes an output, still validate via document recompute because other dependent objects may not update until the document graph runs.
+
+## File and cross-document workflows
+
+- Use `saveAs(...)`, close/reopen, then validate when testing persistence of expressions, spreadsheet formulas, strings, or cross-document links.
+- Do not depend on temporary unsaved document identity for cross-file references.
+- When an expression includes another document, verify after reopening both documents because persistence behavior is part of the contract being tested.
+
+## Agent direct-use policy
+
+- Use the FreeCAD-compatible Python surface directly for compiled-binding introspection, uncommon TypeIds, dynamic properties, expression graph inspection, and workbench APIs.
+- Before assigning an unfamiliar property, introspect `PropertiesList` and metadata.
+- Before using an unfamiliar TypeId, check `doc.supportedTypes()`.
+- After any mutation path, recompute and validate the exact changed objects.

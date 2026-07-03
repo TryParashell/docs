@@ -53,7 +53,7 @@ See [Runtime introspection](/agent/runtime-introspection).
 ## Agent decision tree
 
 1. Prefer MCP tool reference for all bridge-exposed actions.
-2. If Python is required, check [Compatible modules](/agent/compatible-modules), [Python API](/agent/python-api), and [TypeIds and properties](/agent/typeids-properties).
+2. If Python is required, check [Compatible modules](/agent/compatible-modules), [Python API](/agent/python-api), [TypeIds and properties](/agent/typeids-properties), and [FreeCAD-compatible online API map](/agent/freecad-compatible-online-api-map).
 3. If a symbol/property remains unknown, run a read-only introspection snippet in Parashell.
 4. Use the discovered exact property or method.
 5. Recompute, render, and validate after mutation.
@@ -62,7 +62,7 @@ See [Runtime introspection](/agent/runtime-introspection).
 
 ```text
 Class A: Exhaustive source-derived MCP tools.
-Class B: Curated FreeCAD-compatible Python API map.
+Class B: Curated FreeCAD-compatible Python API map plus public online reference surfaces.
 Class C: Runtime-discovered compiled bindings and dynamic object properties.
 Class D: Optional workbench APIs; must be imported defensively and verified before use.
 ```

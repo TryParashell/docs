@@ -19,6 +19,7 @@
           "agent/schemas",
           "agent/api-coverage",
           "agent/source-scan-coverage",
+          "agent/freecad-compatible-online-api-map",
           "agent/best-practices",
           "agent/python-quirks",
           "agent/compatible-modules",

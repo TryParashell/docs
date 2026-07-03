@@ -27,3 +27,7 @@ mintlify dev
 ## Terminology
 
 Use `Parashell` for the product. Use `FreeCAD-compatible` only when describing API compatibility or required Python module import names.
+
+## Path naming checks
+
+When renaming implementation directories, search the docs repository for stale CI or private source-tree paths before committing. Do not add documentation that depends on private implementation paths. Prefer published MCP tool names, FreeCAD-compatible module import names, and page-relative documentation paths.

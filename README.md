@@ -13,15 +13,15 @@ npm i -g mint
 Run from this `docs` directory:
 
 ```bash
-mint dev
+mintlify dev
 ```
 
 ## Structure
 
 - `index.mdx`: retrieval map and mandatory invariants.
 - `quickstart.mdx`: first-call sequence for agents.
-- `agent/`: operating model, schemas, coverage contract, all-file source scan coverage, code-derived best practices, Python quirks, compatible module map, runtime introspection, TypeIds/properties, Python API, syntax, workflows, generated Python references.
-- `agent/tools/`: generated MCP tool reference from `Parashell-Modules/Source/Bridge/tools`.
+- `agent/`: operating model, schemas, coverage contract, best practices, Python quirks, compatible module map, runtime introspection, TypeIds/properties, Python API, syntax, workflows, generated Python references.
+- `agent/tools/`: MCP tool reference pages.
 - `docs.json`: Mintlify navigation and site configuration.
 
 ## Terminology

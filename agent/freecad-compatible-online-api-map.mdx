@@ -1,0 +1,271 @@
+---
+title: "FreeCAD-compatible online API map"
+description: "Agent retrieval map for public online FreeCAD-compatible Python API reference surfaces supported by Parashell"
+---
+
+API map. Parashell is FreeCAD-compatible. Use these entries as the complete public online reference surface map for locating API names, signatures, TypeIds, properties, generated bindings, module docs, and workbench-specific Python schemas. This page is a retrieval index, not tutorial prose.
+
+## Coverage statement
+
+```text
+product: Parashell
+compatibility: FreeCAD-compatible
+scope: public online API reference surfaces relevant to Python automation and MCP execution
+primary_reference_root: https://freecad.github.io/SourceDoc/
+manual_api_root: https://freecad.org/api/
+wiki_api_namespace: https://wiki.freecad.org/*_API
+local_stub_reference:
+  - /agent/python-reference-core
+  - /agent/python-reference-modeling
+  - /agent/python-reference-workbenches
+  - /agent/python-reference-misc
+runtime_discovery: /agent/runtime-introspection
+```
+
+Supported API coverage is resolved in this order:
+
+1. Local Parashell MCP tools: `/agent/tools`.
+2. Local Parashell FreeCAD-compatible stubs: `/agent/python-reference-*`.
+3. Public generated source reference: `https://freecad.github.io/SourceDoc/`.
+4. Public manual API root: `https://freecad.org/api/`.
+5. Workbench/API wiki pages named `*_API`.
+6. Active-runtime introspection for compiled bindings, dynamically registered TypeIds, optional workbenches, and document object properties.
+
+## Non-negotiable retrieval invariant
+
+Agents must not assume that a static web page enumerates every loaded runtime symbol. Python-visible API symbols may be provided by compiled extension modules, C++ bindings, workbench registration, optional modules, command registration, document object proxies, dynamically added properties, or loaded documents. If a symbol is absent from static docs, discover it in the active Parashell interpreter before use.
+
+```python
+import FreeCAD
+
+modules = ["FreeCAD", "Part", "Sketcher", "Mesh", "Draft", "TechDraw", "Path", "Fem", "Import", "Material"]
+for name in modules:
+    try:
+        module = __import__(name)
+        print(name, sorted(dir(module)))
+    except Exception as exc:
+        print(name, type(exc).__name__, str(exc))
+
+doc = FreeCAD.ActiveDocument
+if doc:
+    for obj in doc.Objects:
+        print(obj.Name, obj.TypeId, getattr(obj, "PropertiesList", []))
+```
+
+## Official generated source reference modules
+
+The generated source reference is the broadest online API index. It documents C++ and Python components; Python-callable bindings may appear under modules, classes, namespaces, and generated wrapper classes.
+
+```text
+root: https://freecad.github.io/SourceDoc/
+modules_index: https://freecad.github.io/SourceDoc/modules.html
+classes_index: https://freecad.github.io/SourceDoc/annotated.html
+namespace_index: https://freecad.github.io/SourceDoc/namespaces.html
+files_index: https://freecad.github.io/SourceDoc/files.html
+```
+
+### Core generated groups
+
+```text
+Core: https://freecad.github.io/SourceDoc/d4/d68/group__CORE.html
+Base: https://freecad.github.io/SourceDoc/db/d3e/group__BASE.html
+Geometry primers: https://freecad.github.io/SourceDoc/dd/d3b/group__GeomPrimers.html
+Units system: https://freecad.github.io/SourceDoc/de/db4/group__Units.html
+App: https://freecad.github.io/SourceDoc/d6/dd0/group__APP.html
+Document: https://freecad.github.io/SourceDoc/de/da8/group__Document.html
+Document Object: https://freecad.github.io/SourceDoc/d6/dd8/group__DocObject.html
+Expressions framework: https://freecad.github.io/SourceDoc/d9/db1/group__Expression.html
+Property framework: https://freecad.github.io/SourceDoc/de/d36/group__PropFrame.html
+Gui: https://freecad.github.io/SourceDoc/df/dd1/group__GUI.html
+Command Framework: https://freecad.github.io/SourceDoc/d0/d0a/group__commands.html
+Internationalization: https://freecad.github.io/SourceDoc/de/dea/group__i18n.html
+3D Viewer: https://freecad.github.io/SourceDoc/d8/d7d/group__View3D.html
+Workbench Framework: https://freecad.github.io/SourceDoc/d7/dc3/group__workbench.html
+Workbenches: https://freecad.github.io/SourceDoc/d2/df2/group__WORKBENCHES.html
+```
+
+### C++ workbench generated groups
+
+```text
+C++ workbenches: https://freecad.github.io/SourceDoc/dd/d0c/group__CWORKBENCHES.html
+Drawing: https://freecad.github.io/SourceDoc/df/d65/group__DRAWING.html
+Image: https://freecad.github.io/SourceDoc/d6/d28/group__IMAGE.html
+Mesh: https://freecad.github.io/SourceDoc/de/d56/group__MESH.html
+MeshPart: https://freecad.github.io/SourceDoc/db/d90/group__MESHPART.html
+Part namespace: https://freecad.github.io/SourceDoc/d2/db9/namespacePart.html
+Mesh namespace: https://freecad.github.io/SourceDoc/dc/d48/namespaceMesh.html
+Part: https://freecad.github.io/SourceDoc/da/dc5/group__PART.html
+PartDesign: https://freecad.github.io/SourceDoc/d7/d10/group__PARTDESIGN.html
+Points: https://freecad.github.io/SourceDoc/dd/dee/group__POINTS.html
+Raytracing: https://freecad.github.io/SourceDoc/db/dca/group__RAYTRACING.html
+ReverseEngineering: https://freecad.github.io/SourceDoc/d3/d98/group__REEN.html
+Points namespace: https://freecad.github.io/SourceDoc/d6/dac/namespacePoints.html
+Robot: https://freecad.github.io/SourceDoc/d6/d53/group__ROBOT.html
+Sandbox: https://freecad.github.io/SourceDoc/d4/d70/group__SANDBOX.html
+Sketcher: https://freecad.github.io/SourceDoc/d6/db6/group__SKETCHER.html
+Spreadsheet: https://freecad.github.io/SourceDoc/d7/dc8/group__SPREADSHEET.html
+Start: https://freecad.github.io/SourceDoc/db/dcd/group__START.html
+TechDraw: https://freecad.github.io/SourceDoc/d2/d55/group__TECHDRAW.html
+Test: https://freecad.github.io/SourceDoc/d9/d19/group__TEST.html
+Web: https://freecad.github.io/SourceDoc/da/d25/group__WEB.html
+```
+
+### Python workbench generated groups
+
+```text
+Python workbenches: https://freecad.github.io/SourceDoc/d1/d82/group__PYTHONWORKBENCHES.html
+Addon Manager: https://freecad.github.io/SourceDoc/de/d45/group__ADDONMANAGER.html
+Arch: https://freecad.github.io/SourceDoc/df/dce/group__ARCH.html
+Draft: https://freecad.github.io/SourceDoc/d1/d35/group__DRAFT.html
+draftfunctions: https://freecad.github.io/SourceDoc/d2/d57/group__draftfunctions.html
+draftgeoutils: https://freecad.github.io/SourceDoc/d9/dfd/group__draftgeoutils.html
+draftguitools: https://freecad.github.io/SourceDoc/db/d6d/group__draftguitools.html
+draftmake: https://freecad.github.io/SourceDoc/d5/d7f/group__draftmake.html
+draftobjects: https://freecad.github.io/SourceDoc/de/de1/group__draftobjects.html
+drafttaskpanels: https://freecad.github.io/SourceDoc/d5/d89/group__drafttaskpanels.html
+drafttests: https://freecad.github.io/SourceDoc/d8/dd4/group__drafttests.html
+draftutils: https://freecad.github.io/SourceDoc/de/d75/group__draftutils.html
+draftviewproviders: https://freecad.github.io/SourceDoc/d5/d24/group__draftviewproviders.html
+Fem: https://freecad.github.io/SourceDoc/dc/de2/group__FEM.html
+OpenSCAD: https://freecad.github.io/SourceDoc/d3/dd7/group__OPENSCAD.html
+Path: https://freecad.github.io/SourceDoc/dc/db4/group__PATH.html
+Plot: https://freecad.github.io/SourceDoc/dc/dca/group__PLOT.html
+Utility modules: https://freecad.github.io/SourceDoc/da/d56/group__UTILITIES.html
+OfflineRenderingUtils: https://freecad.github.io/SourceDoc/d4/d5a/group__OFFLINERENDERINGUTILS.html
+DraftGeomUtils: https://freecad.github.io/SourceDoc/de/d33/group__DRAFTGEOMUTILS.html
+Draft namespace: https://freecad.github.io/SourceDoc/d4/d1a/namespaceDraft.html
+DraftVecUtils: https://freecad.github.io/SourceDoc/dc/dc3/group__DRAFTVECUTILS.html
+Idf: https://freecad.github.io/SourceDoc/de/d9a/group__IDF.html
+Import: https://freecad.github.io/SourceDoc/d2/d5a/group__IMPORT.html
+Material: https://freecad.github.io/SourceDoc/d4/d42/group__MATERIAL.html
+Measure: https://freecad.github.io/SourceDoc/dd/d96/group__MEASURE.html
+```
+
+### Parameter and embedded-library generated groups
+
+```text
+Parameters helper macros: https://freecad.github.io/SourceDoc/dc/dbe/group__ParamHelper.html
+Field accessors: https://freecad.github.io/SourceDoc/d2/dab/group__ParamAccessor.html
+Field stringizers: https://freecad.github.io/SourceDoc/d0/db4/group__ParamStringizer.html
+Looper macros: https://freecad.github.io/SourceDoc/dc/d97/group__ParamLooper.html
+Common helpers: https://freecad.github.io/SourceDoc/d7/d78/group__ParamCommon.html
+Enum convert helpers: https://freecad.github.io/SourceDoc/dc/dd3/group__ParamEnumHelper.html
+Python helper: https://freecad.github.io/SourceDoc/de/df2/group__ParamPy.html
+Python doc helper: https://freecad.github.io/SourceDoc/da/d6a/group__ParamDoc.html
+Property Macros: https://freecad.github.io/SourceDoc/d1/d20/group__ParamProperty.html
+Embedded 3rd party libraries: https://freecad.github.io/SourceDoc/d0/dd8/group__EMBEDDED.html
+PyCXX: https://freecad.github.io/SourceDoc/d9/daa/group__PYCXX.html
+Zipios++: https://freecad.github.io/SourceDoc/d7/db6/group__ZIPIOS.html
+Salome SMESH: https://freecad.github.io/SourceDoc/d5/d42/group__SMESH.html
+SMESH namespace: https://freecad.github.io/SourceDoc/d9/d7d/namespaceSMESH.html
+Fem namespace: https://freecad.github.io/SourceDoc/dd/d72/namespaceFem.html
+Dice 3DS: https://freecad.github.io/SourceDoc/df/da6/group__DICE3DS.html
+Arch namespace: https://freecad.github.io/SourceDoc/df/dc6/namespaceArch.html
+WildMagic4: https://freecad.github.io/SourceDoc/d5/d8a/group__WM4.html
+```
+
+## Manual wiki API pages
+
+Use these pages for hand-authored Python-call syntax, common function names, and examples. Prefer generated source docs and runtime introspection when manual pages conflict with the active Parashell build.
+
+```text
+FreeCAD API: https://wiki.freecad.org/FreeCAD_API
+FreeCADGui API: https://wiki.freecad.org/FreeCADGui_API
+Part API: https://wiki.freecad.org/Part_API
+Mesh API: https://wiki.freecad.org/Mesh_API
+Draft API: https://wiki.freecad.org/Draft_API
+Arch API: https://wiki.freecad.org/Arch_API
+TechDraw API: https://wiki.freecad.org/TechDraw_API
+Sketcher scripting: https://wiki.freecad.org/Sketcher_scripting
+Python scripting tutorial: https://wiki.freecad.org/Python_scripting_tutorial
+Power users hub: https://wiki.freecad.org/Power_users_hub
+```
+
+## Required module import names
+
+```text
+FreeCAD
+FreeCADGui
+Part
+PartDesign
+Sketcher
+Mesh
+MeshPart
+Draft
+Arch
+TechDraw
+Spreadsheet
+Import
+ImportGui
+MeshPart
+Points
+Fem
+Path
+OpenSCAD
+Material
+Measure
+Raytracing
+Robot
+Drawing
+Image
+Web
+Start
+Plot
+DraftGeomUtils
+DraftVecUtils
+OfflineRenderingUtils
+```
+
+## Exhaustive symbol retrieval procedure
+
+Run this inside the active Parashell process when a task requires complete symbol certainty:
+
+```python
+import importlib
+
+module_names = [
+    "FreeCAD", "FreeCADGui", "Part", "PartDesign", "Sketcher", "Mesh", "MeshPart",
+    "Draft", "Arch", "TechDraw", "Spreadsheet", "Import", "ImportGui", "Points",
+    "Fem", "Path", "OpenSCAD", "Material", "Measure", "Raytracing", "Robot", "Drawing",
+    "Image", "Web", "Start", "Plot", "DraftGeomUtils", "DraftVecUtils", "OfflineRenderingUtils",
+]
+
+for module_name in module_names:
+    try:
+        module = importlib.import_module(module_name)
+    except Exception as exc:
+        print({"module": module_name, "import_error": type(exc).__name__, "message": str(exc)})
+        continue
+    for symbol_name in sorted(dir(module)):
+        symbol = getattr(module, symbol_name, None)
+        print({
+            "module": module_name,
+            "symbol": symbol_name,
+            "type": type(symbol).__name__,
+            "callable": callable(symbol),
+            "doc": (getattr(symbol, "__doc__", None) or "")[:500],
+        })
+```
+
+Document-object completeness requires object creation or document inspection because `TypeId` and `PropertiesList` are runtime-defined:
+
+```python
+import FreeCAD
+
+doc = FreeCAD.ActiveDocument or FreeCAD.newDocument()
+print({"supportedTypes": getattr(doc, "supportedTypes", lambda: [])()})
+for obj in doc.Objects:
+    print({
+        "name": obj.Name,
+        "label": obj.Label,
+        "type_id": obj.TypeId,
+        "properties": list(getattr(obj, "PropertiesList", [])),
+    })
+    for prop in getattr(obj, "PropertiesList", []):
+        print({
+            "property": prop,
+            "type": obj.getTypeIdOfProperty(prop) if hasattr(obj, "getTypeIdOfProperty") else None,
+            "group": obj.getGroupOfProperty(prop) if hasattr(obj, "getGroupOfProperty") else None,
+            "doc": obj.getDocumentationOfProperty(prop) if hasattr(obj, "getDocumentationOfProperty") else None,
+        })
+```

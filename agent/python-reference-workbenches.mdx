@@ -1,17 +1,12 @@
 ---
 title: "Python reference: workbench stubs"
-description: "Generated workbench FreeCAD-compatible API stub reference from /Parashell"
+description: "Static workbench FreeCAD-compatible API stub reference"
 ---
 
-Generated from `/Parashell/**/*.pyi` only. Module names and import names are compatibility-layer names. Descriptions are normalized to avoid identifying Parashell as the upstream product.
+Static FreeCAD-compatible API stub reference. Module names and import names are compatibility-layer names. Descriptions are normalized to avoid identifying Parashell as the upstream product.
 
 ```text
-stub_files_in_page: 47
-source_root: Parashell
-```
-
-```text
-MODULE src/Mod/Assembly/App/AssemblyLink.pyi
+MODULE Mod/Assembly/App/AssemblyLink.pyi
 classes:
   class AssemblyLink(Part)
     doc:
@@ -23,7 +18,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Assembly/App/AssemblyObject.pyi
+MODULE Mod/Assembly/App/AssemblyObject.pyi
 classes:
   class AssemblyObject(Part)
     doc:
@@ -157,7 +152,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Assembly/App/BomGroup.pyi
+MODULE Mod/Assembly/App/BomGroup.pyi
 classes:
   class BomGroup(DocumentObjectGroup)
     doc:
@@ -165,7 +160,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Assembly/App/BomObject.pyi
+MODULE Mod/Assembly/App/BomObject.pyi
 classes:
   class BomObject(Sheet)
     doc:
@@ -173,7 +168,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Assembly/App/JointGroup.pyi
+MODULE Mod/Assembly/App/JointGroup.pyi
 classes:
   class JointGroup(DocumentObjectGroup)
     doc:
@@ -181,7 +176,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Assembly/App/SimulationGroup.pyi
+MODULE Mod/Assembly/App/SimulationGroup.pyi
 classes:
   class SimulationGroup(DocumentObjectGroup)
     doc:
@@ -189,7 +184,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Assembly/App/ViewGroup.pyi
+MODULE Mod/Assembly/App/ViewGroup.pyi
 classes:
   class ViewGroup(DocumentObjectGroup)
     doc:
@@ -197,7 +192,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Assembly/Gui/ViewProviderAssembly.pyi
+MODULE Mod/Assembly/Gui/ViewProviderAssembly.pyi
 attributes:
   - SoTransformDragger: TypeAlias
 classes:
@@ -245,7 +240,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/CAM/App/Area.pyi
+MODULE Mod/CAM/App/Area.pyi
 classes:
   class Area(BaseClass)
     doc:
@@ -318,7 +313,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/CAM/App/Command.pyi
+MODULE Mod/CAM/App/Command.pyi
 classes:
   class Command(Persistence)
     doc:
@@ -357,7 +352,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/CAM/App/FeatureArea.pyi
+MODULE Mod/CAM/App/FeatureArea.pyi
 classes:
   class FeatureArea(DocumentObject)
     doc:
@@ -380,7 +375,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/CAM/App/FeaturePathCompound.pyi
+MODULE Mod/CAM/App/FeaturePathCompound.pyi
 classes:
   class FeaturePathCompound(DocumentObject)
     doc:
@@ -395,7 +390,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/CAM/App/Path.pyi
+MODULE Mod/CAM/App/Path.pyi
 classes:
   class Path(Persistence)
     doc:
@@ -452,7 +447,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/CAM/App/Voronoi.pyi
+MODULE Mod/CAM/App/Voronoi.pyi
 classes:
   class Voronoi(BaseClass)
     doc:
@@ -520,7 +515,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/CAM/App/VoronoiCell.pyi
+MODULE Mod/CAM/App/VoronoiCell.pyi
 classes:
   class VoronoiCell(BaseClass)
     doc:
@@ -564,7 +559,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/CAM/App/VoronoiEdge.pyi
+MODULE Mod/CAM/App/VoronoiEdge.pyi
 classes:
   class VoronoiEdge(BaseClass)
     doc:
@@ -641,7 +636,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/CAM/App/VoronoiVertex.pyi
+MODULE Mod/CAM/App/VoronoiVertex.pyi
 classes:
   class VoronoiVertex(BaseClass)
     doc:
@@ -670,7 +665,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/CAM/PathSimulator/App/PathSim.pyi
+MODULE Mod/CAM/PathSimulator/App/PathSim.pyi
 classes:
   class PathSim(BaseClass)
     doc:
@@ -699,7 +694,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/CAM/PathSimulator/AppGL/CAMSim.pyi
+MODULE Mod/CAM/PathSimulator/AppGL/CAMSim.pyi
 classes:
   class CAMSim(BaseClass)
     doc:
@@ -727,7 +722,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Fem/App/FemMesh.pyi
+MODULE Mod/Fem/App/FemMesh.pyi
 classes:
   class FemMesh(ComplexGeoData)
     doc:
@@ -1023,7 +1018,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Fem/App/FemPostBranchFilter.pyi
+MODULE Mod/Fem/App/FemPostBranchFilter.pyi
 classes:
   class FemPostBranchFilter(FemPostFilter)
     doc:
@@ -1044,7 +1039,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Fem/App/FemPostFilter.pyi
+MODULE Mod/Fem/App/FemPostFilter.pyi
 attributes:
   - vtkAlgorithm: TypeAlias
 classes:
@@ -1079,7 +1074,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Fem/App/FemPostObject.pyi
+MODULE Mod/Fem/App/FemPostObject.pyi
 attributes:
   - vtkDataSet: TypeAlias
 classes:
@@ -1107,7 +1102,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Fem/App/FemPostPipeline.pyi
+MODULE Mod/Fem/App/FemPostPipeline.pyi
 attributes:
   - vtkAlgorithm: TypeAlias
 classes:
@@ -1175,7 +1170,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Fem/Gui/ViewProviderFemConstraint.pyi
+MODULE Mod/Fem/Gui/ViewProviderFemConstraint.pyi
 classes:
   class ViewProviderFemConstraint(ViewProviderGeometryObject)
     doc:
@@ -1204,7 +1199,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Fem/Gui/ViewProviderFemMesh.pyi
+MODULE Mod/Fem/Gui/ViewProviderFemMesh.pyi
 classes:
   class ViewProviderFemMesh(ViewProviderGeometryObject)
     doc:
@@ -1243,7 +1238,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Fem/Gui/ViewProviderFemPostFilter.pyi
+MODULE Mod/Fem/Gui/ViewProviderFemPostFilter.pyi
 classes:
   class ViewProviderFemPostFilter(ViewProviderDocumentObject)
     doc:
@@ -1258,7 +1253,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Fem/Gui/ViewProviderFemPostPipeline.pyi
+MODULE Mod/Fem/Gui/ViewProviderFemPostPipeline.pyi
 classes:
   class ViewProviderFemPostPipeline(ViewProviderDocumentObject)
     doc:
@@ -1273,7 +1268,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Fem/Gui/ViewProviderShapeExtension.pyi
+MODULE Mod/Fem/Gui/ViewProviderShapeExtension.pyi
 classes:
   class ViewProviderShapeExtension(ViewProviderExtension)
     doc:
@@ -1285,7 +1280,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Material/App/Array2D.pyi
+MODULE Mod/Material/App/Array2D.pyi
 classes:
   class Array2D(BaseClass)
     doc:
@@ -1318,7 +1313,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Material/App/Array3D.pyi
+MODULE Mod/Material/App/Array3D.pyi
 classes:
   class Array3D(BaseClass)
     doc:
@@ -1361,7 +1356,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Material/App/Material.pyi
+MODULE Mod/Material/App/Material.pyi
 classes:
   class Material(BaseClass)
     doc:
@@ -1490,7 +1485,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Material/App/MaterialFilter.pyi
+MODULE Mod/Material/App/MaterialFilter.pyi
 classes:
   class MaterialFilter(BaseClass)
     doc:
@@ -1508,7 +1503,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Material/App/MaterialFilterOptions.pyi
+MODULE Mod/Material/App/MaterialFilterOptions.pyi
 classes:
   class MaterialFilterOptions(BaseClass)
     doc:
@@ -1532,7 +1527,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Material/App/MaterialLibrary.pyi
+MODULE Mod/Material/App/MaterialLibrary.pyi
 classes:
   class MaterialLibrary(BaseClass)
     doc:
@@ -1556,7 +1551,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Material/App/MaterialManager.pyi
+MODULE Mod/Material/App/MaterialManager.pyi
 classes:
   class MaterialManager(BaseClass)
     doc:
@@ -1596,7 +1591,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Material/App/MaterialProperty.pyi
+MODULE Mod/Material/App/MaterialProperty.pyi
 classes:
   class MaterialProperty(ModelProperty)
     doc:
@@ -1611,7 +1606,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Material/App/Model.pyi
+MODULE Mod/Material/App/Model.pyi
 classes:
   class Model(BaseClass)
     doc:
@@ -1663,7 +1658,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Material/App/ModelManager.pyi
+MODULE Mod/Material/App/ModelManager.pyi
 classes:
   class ModelManager(BaseClass)
     doc:
@@ -1688,7 +1683,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Material/App/ModelProperty.pyi
+MODULE Mod/Material/App/ModelProperty.pyi
 classes:
   class ModelProperty(BaseClass)
     doc:
@@ -1728,7 +1723,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Material/App/UUIDs.pyi
+MODULE Mod/Material/App/UUIDs.pyi
 classes:
   class UUIDs(BaseClass)
     doc:
@@ -1884,7 +1879,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Material/Gui/MaterialTreeWidget.pyi
+MODULE Mod/Material/Gui/MaterialTreeWidget.pyi
 classes:
   class MaterialTreeWidget(BaseClass)
     doc:
@@ -1921,7 +1916,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Robot/App/Robot6Axis.pyi
+MODULE Mod/Robot/App/Robot6Axis.pyi
 classes:
   class Robot6Axis(Persistence)
     doc:
@@ -1959,7 +1954,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Robot/App/RobotObject.pyi
+MODULE Mod/Robot/App/RobotObject.pyi
 classes:
   class RobotObject(DocumentObject)
     doc:
@@ -1972,7 +1967,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Robot/App/Trajectory.pyi
+MODULE Mod/Robot/App/Trajectory.pyi
 classes:
   class Trajectory(Persistence)
     doc:
@@ -2004,7 +1999,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Robot/App/Waypoint.pyi
+MODULE Mod/Robot/App/Waypoint.pyi
 classes:
   class Waypoint(Persistence)
     doc:
@@ -2037,7 +2032,7 @@ classes:
 ```
 
 ```text
-MODULE src/Mod/Test/Gui/QtUnitGui._UnitTest.pyi
+MODULE Mod/Test/Gui/QtUnitGui._UnitTest.pyi
 module_doc:
   Typed public method signatures for the ``QtUnitGui._UnitTest`` PyCXX type.
 classes:

@@ -7,11 +7,9 @@ This page is the coverage contract for agent retrieval.
 
 ## Exhaustive in these docs
 
-The MCP tool reference is exhaustive for the current bridge source in this repository:
+The MCP tool reference is exhaustive for the currently published Parashell MCP surface:
 
 ```text
-Source directory: Parashell-Modules/Source/Bridge/tools
-Registration form: @mcp.tool()
 Documented tools: 95
 Index: /agent/tools
 ```
@@ -20,7 +18,6 @@ Every registered MCP tool has:
 
 - tool name
 - signature excluding injected `ctx`
-- source file
 - full descriptor/docstring
 - category page
 
@@ -53,7 +50,7 @@ See [Runtime introspection](/agent/runtime-introspection).
 ## Agent decision tree
 
 1. Prefer MCP tool reference for all bridge-exposed actions.
-2. If Python is required, check [Compatible modules](/agent/compatible-modules), [Python API](/agent/python-api), and [TypeIds and properties](/agent/typeids-properties).
+2. If Python is required, check [Compatible modules](/agent/compatible-modules), [Python API](/agent/python-api), [TypeIds and properties](/agent/typeids-properties), and [FreeCAD-compatible online API map](/agent/freecad-compatible-online-api-map).
 3. If a symbol/property remains unknown, run a read-only introspection snippet in Parashell.
 4. Use the discovered exact property or method.
 5. Recompute, render, and validate after mutation.
@@ -61,8 +58,8 @@ See [Runtime introspection](/agent/runtime-introspection).
 ## Documentation coverage classes
 
 ```text
-Class A: Exhaustive source-derived MCP tools.
-Class B: Curated FreeCAD-compatible Python API map.
+Class A: Exhaustive published MCP tools.
+Class B: Curated FreeCAD-compatible Python API map plus public online reference surfaces.
 Class C: Runtime-discovered compiled bindings and dynamic object properties.
 Class D: Optional workbench APIs; must be imported defensively and verified before use.
 ```

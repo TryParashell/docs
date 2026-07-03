@@ -11,8 +11,6 @@ Client note: `ctx` is injected by the MCP server and is not supplied as a user a
 
 ## `capture_view_baseline`
 
-Source: `Parashell-Modules/Source/Bridge/tools/capture_view_baseline.py`
-
 Signature:
 
 ```python
@@ -37,8 +35,6 @@ Args:
 
 ## `clear_view_baselines`
 
-Source: `Parashell-Modules/Source/Bridge/tools/clear_view_baselines.py`
-
 Signature:
 
 ```python
@@ -57,8 +53,6 @@ Args:
 ```
 
 ## `compare_views`
-
-Source: `Parashell-Modules/Source/Bridge/tools/compare_views.py`
 
 Signature:
 
@@ -87,8 +81,6 @@ Args:
 ```
 
 ## `get_feature_tree`
-
-Source: `Parashell-Modules/Source/Bridge/tools/get_feature_tree.py`
 
 Signature:
 
@@ -130,8 +122,6 @@ Args:
 
 ## `get_object`
 
-Source: `Parashell-Modules/Source/Bridge/tools/get_object.py`
-
 Signature:
 
 ```python
@@ -150,8 +140,6 @@ Args:
 
 ## `get_objects`
 
-Source: `Parashell-Modules/Source/Bridge/tools/get_objects.py`
-
 Signature:
 
 ```python
@@ -168,8 +156,6 @@ Args:
 ```
 
 ## `get_ortho`
-
-Source: `Parashell-Modules/Source/Bridge/tools/get_ortho.py`
 
 Signature:
 
@@ -219,8 +205,6 @@ Args:
 
 ## `get_selection`
 
-Source: `Parashell-Modules/Source/Bridge/tools/get_selection.py`
-
 Signature:
 
 ```python
@@ -238,8 +222,6 @@ resolve what the user means by "this", "that", or "the selected" object.
 ```
 
 ## `get_techdraw_page`
-
-Source: `Parashell-Modules/Source/Bridge/tools/get_techdraw_page.py`
 
 Signature:
 
@@ -269,8 +251,6 @@ Args:
 ```
 
 ## `get_view`
-
-Source: `Parashell-Modules/Source/Bridge/tools/get_view.py`
 
 Signature:
 
@@ -318,8 +298,6 @@ Args:
 
 ## `get_view_with_overlays`
 
-Source: `Parashell-Modules/Source/Bridge/tools/get_view_with_overlays.py`
-
 Signature:
 
 ```python
@@ -360,8 +338,6 @@ Args:
 ```
 
 ## `get_world_state`
-
-Source: `Parashell-Modules/Source/Bridge/tools/get_world_state.py`
 
 Signature:
 
@@ -410,8 +386,6 @@ Args:
 
 ## `list_techdraw_pages`
 
-Source: `Parashell-Modules/Source/Bridge/tools/list_techdraw_pages.py`
-
 Signature:
 
 ```python
@@ -434,8 +408,6 @@ Args:
 
 ## `list_view_baselines`
 
-Source: `Parashell-Modules/Source/Bridge/tools/list_view_baselines.py`
-
 Signature:
 
 ```python
@@ -451,8 +423,6 @@ Returns the set of identifiers that compare_views can reference.
 ```
 
 ## `move_viewport`
-
-Source: `Parashell-Modules/Source/Bridge/tools/move_viewport.py`
 
 Signature:
 
@@ -498,8 +468,6 @@ Args:
 
 ## `reset_view`
 
-Source: `Parashell-Modules/Source/Bridge/tools/reset_view.py`
-
 Signature:
 
 ```python
@@ -523,8 +491,6 @@ Args:
 
 ## `take_snapshot`
 
-Source: `Parashell-Modules/Source/Bridge/tools/take_snapshot.py`
-
 Signature:
 
 ```python
@@ -536,7 +502,7 @@ Descriptor:
 ```text
 Return a structured snapshot of a document with stable uids per object.
 
-Mirrors the chrome devtools take_snapshot pattern: every object is reported
+Reports a snapshot tree: every object is reported
 with a deterministic 'uid' that round-trips across calls (the uid is a hash
 of doc + object name, so the same object always returns the same uid). Use
 those uids in any other viewport tool that accepts a target - get_view,

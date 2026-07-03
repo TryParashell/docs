@@ -1,28 +1,9 @@
 ---
 title: "Best practices"
-description: "Code-derived Parashell agent practices for the FreeCAD-compatible API"
+description: "Parashell agent practices for the FreeCAD-compatible API"
 ---
 
-This page is agent-facing operating guidance derived only from files under `/Parashell` in this repository. Treat it as a source-grounded practice layer over the API references, not as an external manual.
-
-Initial focused source files:
-
-```text
-Parashell/src/App/DocumentPyImp.cpp
-Parashell/src/App/DocumentObjectPyImp.cpp
-Parashell/src/App/PropertyContainerPyImp.cpp
-Parashell/src/App/Expression.cpp
-Parashell/src/Mod/Test/Document.py
-Parashell/src/Mod/Test/Recompute.py
-Parashell/src/Mod/Test/TestRubberbandSelection.py
-Parashell/src/Mod/Spreadsheet/TestSpreadsheet.py
-Parashell/src/Mod/Draft/Draft.py
-Parashell/src/Mod/BIM/Arch.py
-Parashell/src/Mod/TechDraw/TDTest/TechDrawTestUtilities.py
-Parashell/src/Mod/TechDraw/TDTest/DrawViewDimensionTest.py
-```
-
-The later all-file scan is recorded in [Source scan coverage](/agent/source-scan-coverage). Dense generated callable references are in [Python reference: core stubs](/agent/python-reference-core), [Python reference: modeling stubs](/agent/python-reference-modeling), [Python reference: workbench stubs](/agent/python-reference-workbenches), and [Python source symbols](/agent/python-source-symbols).
+This page is agent-facing operating guidance for reliable Parashell automation. Treat it as a practice layer over the API references.
 
 ## Document lifecycle
 
@@ -32,7 +13,7 @@ The later all-file scan is recorded in [Source scan coverage](/agent/source-scan
 - Use `doc.getObject(name_or_id)` when the exact internal name or numeric id is known.
 - Use `doc.findObjects(Type="...", Name="...", Label="...")` for filtered discovery.
 - Use `doc.getObjectsByLabel(label)` only when label-based ambiguity is acceptable or expected.
-- Use `doc.supportedTypes()` before constructing optional or workbench-dependent TypeIds. `Part::Feature` creation in tests is guarded this way and falls back to `Part.show(shape, name)` when needed.
+- Use `doc.supportedTypes()` before constructing optional or workbench-dependent TypeIds. `Part::Feature` creation should be guarded this way and falls back to `Part.show(shape, name)` when needed.
 - Prefer `doc.Objects`, `doc.RootObjects`, and `doc.TopologicalSortedObjects` for inventory or dependency-sensitive traversal.
 
 ## Transactions
@@ -51,7 +32,7 @@ except Exception:
 ```
 
 - Use transaction labels that identify the modeling intent, not implementation trivia.
-- Treat document transactions as potentially application-scoped. The source-adjacent `Document.pyi` stub documents `openTransaction(name)` as routing through `FreeCAD.setActiveTransaction(name)`, and multi-document changes can share one internal transaction id.
+- Treat document transactions as potentially application-scoped. The `Document.pyi` stub documents `openTransaction(name)` as routing through `FreeCAD.setActiveTransaction(name)`, and multi-document changes can share one internal transaction id.
 - Commit only after all properties and links in that logical edit are assigned.
 - Abort on exceptions before retrying with a different strategy.
 - Use `doc.hasPendingTransaction` when recovery logic needs to know whether abort/commit is valid.
@@ -64,7 +45,7 @@ except Exception:
 - `doc.recompute()` returns an object count. Capture it when the task needs to know whether a mutation actually propagated.
 - `doc.recompute([obj1, obj2])` is supported. Use targeted recompute for parameter propagation tests or narrow dependency updates, then validate downstream state.
 - `doc.recompute(objects, force, checkCycle)` accepts `force` and `checkCycle` booleans at the binding layer. Use cycle checking when generating or modifying expression graphs.
-- Use object state as a dependency signal. The code tests `"Touched" in obj.State` and `"Up-to-date" in dimension.State`.
+- Use object state as a dependency signal. Check `"Touched" in obj.State` and `"Up-to-date" in dimension.State` when validating state.
 - `obj.recompute(recursive=False)` recomputes a feature and returns a boolean. Prefer document recompute for normal modeling because document dependencies are broader.
 - `obj.isValid()` is available for object validity checks; shape-specific validation still requires shape inspection.
 
@@ -74,7 +55,7 @@ except Exception:
 - Use `obj.setExpression(path, None)` or `obj.clearExpression(path)` to remove an expression. Do not overwrite with an empty string unless the target API explicitly documents that behavior.
 - Use `obj.getExpression(path)` when checking current bindings.
 - Expression changes create dependency edges. Validate expected propagation by recomputing and checking touched state or driven property values.
-- Use `hiddenref(...)` only when the dependency is intentionally hidden from normal object link tracking. Source tests show that `hiddenref(VarSet.Length)` removes ordinary `InList`, `OutList`, and property edge visibility while still allowing expression evaluation. This is a specialized dependency tool, not a default reference form.
+- Use `hiddenref(...)` only when the dependency is intentionally hidden from normal object link tracking. `hiddenref(VarSet.Length)` removes ordinary `InList`, `OutList`, and property edge visibility while still allowing expression evaluation. This is a specialized dependency tool, not a default reference form.
 - Use `setPropertyStatus(name, "Output")` for computed output properties and `setPropertyStatus(name, ["Input"])` for input properties that should participate in fine-grained dependency behavior.
 
 ## Parameter objects

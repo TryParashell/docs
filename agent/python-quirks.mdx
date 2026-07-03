@@ -1,22 +1,22 @@
 ---
 title: "Python quirks"
-description: "Source-scan Python quirks for Parashell agents using the FreeCAD-compatible API"
+description: "Python quirks for Parashell agents using the FreeCAD-compatible API"
 ---
 
-This page is derived only from scanning `/Parashell`. It records Python-facing behavior that affects agent execution and retrieval.
+This page records Python-facing behavior that affects agent execution and retrieval.
 
-## Source priority
+## Reference priority
 
-- Use `.pyi` stubs as the first static callable reference when present. The all-file scan found 277 `.pyi` files, all parse-clean under the active interpreter.
-- Treat `.py` implementation files as operational evidence, not as a guaranteed import target. The scan found 34 `.py` files that do not parse under the active interpreter.
-- Runtime truth still belongs to the loaded Parashell process: imported modules, `doc.supportedTypes()`, object `PropertiesList`, property metadata, and actual object `TypeId`.
-- Do not bulk import arbitrary source files from `/Parashell` for discovery. Use loaded modules or stubs, then confirm with runtime introspection.
+- Use `.pyi` stub reference pages as the first static callable reference when present.
+- Treat implementation details as operational evidence, not as guaranteed public API.
+- Runtime truth belongs to the loaded Parashell process: imported modules, `doc.supportedTypes()`, object `PropertiesList`, property metadata, and actual object `TypeId`.
+- Do not bulk import arbitrary implementation files for discovery. Use loaded modules or stubs, then confirm with runtime introspection.
 
 ## Stub semantics
 
 - Stubs frequently use `from __future__ import annotations`, `TYPE_CHECKING`, `Final`, `Literal`, `TypeAlias`, `TypedDict`, and `@overload`. These are signature/reference constructs, not proof that every referenced name is importable at runtime from the stub file path.
 - Repeated `@overload` definitions describe accepted call shapes. Prefer the most specific overload for argument construction; use the broad implementation signature as the fallback.
-- Class and attribute docstrings in the stubs are source-adjacent descriptors. Use them as descriptors, but still inspect runtime object properties for dynamic objects.
+- Class and attribute docstrings in the stubs are static descriptors. Use them as descriptors, but still inspect runtime object properties for dynamic objects.
 - Module names in stubs use compatibility import names such as `FreeCAD`, `Part`, `Sketcher`, `Mesh`, `Spreadsheet`, and `TechDraw`.
 
 ## Document and transaction quirks
@@ -62,7 +62,7 @@ This page is derived only from scanning `/Parashell`. It records Python-facing b
 - `DocumentObject.evalExpression(expression)` can evaluate an expression without assigning it.
 - `hiddenref(...)` is registered in the expression engine and is tested as a way to evaluate a reference without ordinary dependency edges.
 - Spreadsheet label references use angle-label syntax such as `<<Spreadsheet>>.Length` and formulas use `<<A>>`-style object/name tokens in some contexts.
-- Spreadsheet formulas in tests use semicolons as function argument separators and support conditional syntax with `? :`.
+- Spreadsheet formulas use semicolons as function argument separators and support conditional syntax with `? :`.
 
 ## Spreadsheet quirks
 
@@ -71,7 +71,7 @@ This page is derived only from scanning `/Parashell`. It records Python-facing b
 - Clearing an alias uses `setAlias(cell, "")`.
 - Structural row/column edits can move aliases and formulas. Validate with `getAlias`, `getContents`, and recompute.
 - Mixed-unit aggregations return error strings in cells rather than numeric values.
-- Tuple/vector/matrix/rotation/placement formula constructors are exercised by the source tests; validate result type and tolerance after recompute.
+- Tuple/vector/matrix/rotation/placement formula constructors are validated by the runtime behavior; validate result type and tolerance after recompute.
 
 ## GUI quirks
 
@@ -81,6 +81,5 @@ This page is derived only from scanning `/Parashell`. It records Python-facing b
 
 ## Parseability quirks
 
-- `/Parashell/src/Mod/Test/TestPythonSyntax.py` demonstrates the intended syntax check: walk Python files, parse with `ast.parse`, and allow explicit whitelist entries.
-- The all-file scan found parse failures in generated/templated/workbench files. Treat parse failure as an inspection signal, not as proof the feature is unavailable inside the intended runtime.
-- The `.pyi` reference pages are therefore the safer static API surface; the Python source symbol inventory is a discovery index.
+- Syntax validation should parse snippets with `ast.parse` and allow only explicitly permitted node forms.
+- Prefer `.pyi` reference pages and runtime introspection over implementation-only modules for API discovery.

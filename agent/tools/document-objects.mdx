@@ -296,17 +296,17 @@ Get the list of currently open documents in Parashell.
 Signature:
 
 ```python
-recompute_document(doc_name: str | None = None, force: bool = False, clear_redo: bool = False) -> list[TextContent | ImageContent]
+recompute_document(doc_name: str | None = None, force: bool = False, clear_redo: bool = False, soft_timeout: float | None = None, async_threshold: float | None = None) -> list[TextContent | ImageContent]
 ```
 
 Descriptor:
 
 ```text
-Recompute one or all open Parashell documents.
+Recompute a document object-by-object in dependency order.
 
-Re-evaluates parametric features and dependency graphs. Useful after editing
-properties or geometry through execute_code or other tools where a recompute
-has not been triggered automatically.
+Re-evaluates parametric features along the topological dependency graph. Useful
+after editing properties or geometry through execute_code or other tools where a
+recompute has not been triggered automatically.
 
 The response includes per-document health: how many objects were recomputed,
 how many remain unhealthy after the pass, and the full health record for each
@@ -319,6 +319,65 @@ Args:
     doc_name: Document name to recompute. If omitted, recomputes every open document.
     force: Pass True to recompute every object regardless of touched state.
     clear_redo: Pass True to clear the document's undo/redo stack before recomputing.
+    soft_timeout: Seconds before the pass gives up and returns a partial-progress
+        report naming the object it stalled on. None uses the configured default.
+    async_threshold: Seconds before the pass detaches into a background job and
+        returns a job_id to poll with recompute_status. None uses the configured
+        default.
+```
+
+Response shape:
+
+```text
+status is one of "complete", "timed_out", "running", or "error".
+
+- complete: results carries the per-document health report described above.
+- timed_out: soft_timeout was hit; stuck_on names the object it stalled on and
+  results holds the partial report.
+- running: async_threshold was hit; job_id is returned for recompute_status
+  polling while the recompute continues in the background.
+- error: error carries the failure message.
+```
+
+Operational notes:
+
+- The initial call always returns before the bridge transport deadline: the
+  effective async cutoff is bounded below the RPC timeout, so a long recompute
+  detaches into a background job instead of raising a transport timeout.
+- soft_timeout may exceed the transport deadline; it governs the background job,
+  which you observe through recompute_status rather than the initial call.
+- Poll a returned job_id with recompute_status instead of blocking.
+
+## `recompute_status`
+
+Signature:
+
+```python
+recompute_status(job_id: str) -> list[TextContent | ImageContent]
+```
+
+Descriptor:
+
+```text
+Poll the status of an asynchronous recompute_document job.
+
+Pass the job_id returned by recompute_document when a recompute exceeded the
+async threshold. Reports progress (objects done, current object), the stalled
+object on a soft timeout, or the final per-document result when complete.
+
+Args:
+    job_id: The job identifier returned by recompute_document.
+```
+
+Response shape:
+
+```text
+status is one of "running", "timed_out", "complete", or "error".
+
+- running: objects_recomputed / objects_total progress plus current_object.
+- timed_out: stuck_on names the object the recompute stalled on.
+- complete: results carries the final per-document health report.
+- error: error carries the failure message, or the job_id was not found.
 ```
 
 ## `remove_from_group`

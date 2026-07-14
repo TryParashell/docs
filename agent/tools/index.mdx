@@ -5,7 +5,7 @@ description: "Every Parashell MCP tool with category links and signatures"
 
 This index lists the published Parashell MCP tools.
 
-Total tool count: `95`.
+Total tool count: `96`.
 
 Client note: `ctx` is injected by the MCP server and is not supplied as a user argument.
 
@@ -68,10 +68,15 @@ Client note: `ctx` is injected by the MCP server and is not supplied as a user a
   ```python
   list_documents() -> list[TextContent]
   ```
-- `recompute_document`: Recompute one or all open Parashell documents.
+- `recompute_document`: Recompute a document object-by-object in dependency order.
 
   ```python
-  recompute_document(doc_name: str | None = None, force: bool = False, clear_redo: bool = False) -> list[TextContent | ImageContent]
+  recompute_document(doc_name: str | None = None, force: bool = False, clear_redo: bool = False, soft_timeout: float | None = None, async_threshold: float | None = None) -> list[TextContent | ImageContent]
+  ```
+- `recompute_status`: Poll the status of an asynchronous recompute_document job.
+
+  ```python
+  recompute_status(job_id: str) -> list[TextContent | ImageContent]
   ```
 - `remove_from_group`: Remove objects from a group without deleting them.
 

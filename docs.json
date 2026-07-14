@@ -43,7 +43,8 @@
           "agent/tools/geometry-builders",
           "agent/tools/validation-measurement",
           "agent/tools/transactions-files",
-          "agent/tools/calcinator"
+          "agent/tools/calcinator",
+          "agent/tools/research-web"
         ]
       }
     ],

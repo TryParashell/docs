@@ -5,7 +5,7 @@ description: "Every Parashell MCP tool with category links and signatures"
 
 This index lists the published Parashell MCP tools.
 
-Total tool count: `96`.
+Total tool count: `98`.
 
 Client note: `ctx` is injected by the MCP server and is not supplied as a user argument.
 
@@ -18,71 +18,85 @@ Client note: `ctx` is injected by the MCP server and is not supplied as a user a
   ```python
   add_to_group(doc_name: str, group: str, members: list[str]) -> list[TextContent | ImageContent]
   ```
+
 - `create_document`: Create a new document in Parashell.
 
   ```python
   create_document(name: str) -> list[TextContent]
   ```
+
 - `create_group`: Create an App::DocumentObjectGroup and optionally populate it.
 
   ```python
   create_group(doc_name: str, name: str, members: list[str] | None = None, parent: str | None = None) -> list[TextContent | ImageContent]
   ```
+
 - `create_object`: Create a new object in Parashell. Object type starts with 'Part::', 'Draft::', 'PartDesign::', or 'Fem::'.
 
   ```python
   create_object(doc_name: str, obj_type: str, obj_name: str, transaction_id: str, analysis_name: str | None = None, obj_properties: dict[str, Any] = None) -> list[TextContent | ImageContent]
   ```
+
 - `create_objects`: Batch-create many objects in a single call.
 
   ```python
   create_objects(doc_name: str, items: list[dict[str, Any]], recompute: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `create_pattern`: Place N copies of a source object in a circular, linear, or grid pattern.
 
   ```python
   create_pattern(doc_name: str, source_object: str, kind: Literal['circular', 'linear', 'grid'], count: int, params: dict[str, Any] | None = None, copy_mode: Literal['duplicate', 'link'] = 'duplicate', name_prefix: str | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `delete_object`: Delete an object from a Parashell document.
 
   ```python
   delete_object(doc_name: str, obj_name: str, transaction_id: str) -> list[TextContent | ImageContent]
   ```
+
 - `edit_object`: Edit an object in Parashell.
 
   ```python
   edit_object(doc_name: str, obj_name: str, obj_properties: dict[str, Any], transaction_id: str) -> list[TextContent | ImageContent]
   ```
+
 - `get_parts_list`: Get the list of parts available in the Parashell parts library addon.
 
   ```python
   get_parts_list() -> list[TextContent]
   ```
+
 - `insert_part_from_library`: Insert a part from the Parashell parts library addon.
 
   ```python
   insert_part_from_library(relative_path: str, transaction_id: str) -> list[TextContent | ImageContent]
   ```
+
 - `list_documents`: Get the list of currently open documents in Parashell.
 
   ```python
   list_documents() -> list[TextContent]
   ```
+
 - `recompute_document`: Recompute a document object-by-object in dependency order.
 
   ```python
   recompute_document(doc_name: str | None = None, force: bool = False, clear_redo: bool = False, soft_timeout: float | None = None, async_threshold: float | None = None) -> list[TextContent | ImageContent]
   ```
+
 - `recompute_status`: Poll the status of an asynchronous recompute_document job.
 
   ```python
   recompute_status(job_id: str) -> list[TextContent | ImageContent]
   ```
+
 - `remove_from_group`: Remove objects from a group without deleting them.
 
   ```python
   remove_from_group(doc_name: str, group: str, members: list[str]) -> list[TextContent | ImageContent]
   ```
+
 - `set_appearance`: Apply a single set of ViewObject properties to many objects at once.
 
   ```python
@@ -98,81 +112,97 @@ Client note: `ctx` is injected by the MCP server and is not supplied as a user a
   ```python
   capture_view_baseline(label: str, view_name: Literal['Isometric', 'Front', 'Top', 'Right', 'Back', 'Left', 'Bottom', 'Dimetric', 'Trimetric'] = 'Isometric', width: int | None = None, height: int | None = None, focus_object: str | None = None, display_mode: Literal['Shaded', 'Wireframe', 'Flat Lines', 'Hidden line', 'Points', 'As is'] | None = None, hide: list[str] | None = None, show_only: list[str] | None = None) -> list[TextContent | ImageContent]
   ```
+
 - `clear_view_baselines`: Remove stored baselines.
 
   ```python
   clear_view_baselines(label: str | None = None) -> list[TextContent]
   ```
+
 - `compare_views`: Capture a current screenshot and diff it against a stored baseline.
 
   ```python
   compare_views(baseline_label: str, view_name: Literal['Isometric', 'Front', 'Top', 'Right', 'Back', 'Left', 'Bottom', 'Dimetric', 'Trimetric'] = 'Isometric', width: int | None = None, height: int | None = None, focus_object: str | None = None, display_mode: Literal['Shaded', 'Wireframe', 'Flat Lines', 'Hidden line', 'Points', 'As is'] | None = None, hide: list[str] | None = None, show_only: list[str] | None = None, title: str | None = None) -> list[TextContent | ImageContent]
   ```
+
 - `get_feature_tree`: Return PartDesign body feature dependency graphs for a document.
 
   ```python
   get_feature_tree(doc_name: str, body_name: str | None = None, include_orphans: bool = True) -> list[TextContent]
   ```
+
 - `get_object`: Get a specific object and its properties from a Parashell document.
 
   ```python
   get_object(doc_name: str, obj_name: str) -> list[TextContent | ImageContent]
   ```
+
 - `get_objects`: Get all objects in a Parashell document.
 
   ```python
   get_objects(doc_name: str) -> list[TextContent | ImageContent]
   ```
+
 - `get_ortho`: Get all orthographic views composited into a single labeled grid image.
 
   ```python
   get_ortho(views: list[str] | None = None, tile_width: int = 480, tile_height: int = 360, focus_object: str | None = None, include_isometric: bool = True, display_mode: Literal['Shaded', 'Wireframe', 'Flat Lines', 'Hidden line', 'Points', 'As is'] | None = None, hide: list[str] | None = None, show_only: list[str] | None = None, highlight: list[str] | None = None, highlight_color: list[float] | None = None, camera_mode: Literal['Perspective', 'Orthographic'] | None = None) -> list[ImageContent | TextContent]
   ```
+
 - `get_selection`: Get the objects the user currently has selected in the Parashell viewport.
 
   ```python
   get_selection() -> list[TextContent]
   ```
+
 - `get_techdraw_page`: Render a TechDraw drawing page to a PNG image.
 
   ```python
   get_techdraw_page(page_name: str | None = None, doc_name: str | None = None, width: int | None = None, height: int | None = None) -> list[ImageContent | TextContent]
   ```
+
 - `get_view`: Get a screenshot of the Parashell viewport from a named standard view.
 
   ```python
   get_view(view_name: Literal['Isometric', 'Front', 'Top', 'Right', 'Back', 'Left', 'Bottom', 'Dimetric', 'Trimetric'], width: int | None = None, height: int | None = None, focus_object: str | None = None, display_mode: Literal['Shaded', 'Wireframe', 'Flat Lines', 'Hidden line', 'Points', 'As is'] | None = None, hide: list[str] | None = None, show_only: list[str] | None = None, highlight: list[str] | None = None, highlight_color: list[float] | None = None, camera_mode: Literal['Perspective', 'Orthographic'] | None = None) -> list[ImageContent | TextContent]
   ```
+
 - `get_view_with_overlays`: Get a viewport screenshot with axis legend, bounding-box dimensions, and distance overlays drawn on top.
 
   ```python
   get_view_with_overlays(doc_name: str, view_name: Literal['Isometric', 'Front', 'Top', 'Right', 'Back', 'Left', 'Bottom', 'Dimetric', 'Trimetric'] = 'Isometric', bbox_objects: list[str] | None = None, measurements: list[dict[str, Any]] | None = None, title: str | None = None, show_axis_legend: bool = True, width: int | None = None, height: int | None = None, focus_object: str | None = None, display_mode: Literal['Shaded', 'Wireframe', 'Flat Lines', 'Hidden line', 'Points', 'As is'] | None = None, hide: list[str] | None = None, show_only: list[str] | None = None, highlight: list[str] | None = None) -> list[ImageContent | TextContent]
   ```
+
 - `get_world_state`: Capture a complete structured digest of the current Parashell scene as text.
 
   ```python
   get_world_state(doc_name: str | None = None, include_feature_tree: bool = True, include_geometry: bool = True, max_objects: int = 400) -> list[TextContent]
   ```
+
 - `list_techdraw_pages`: List the TechDraw drawing pages in a Parashell document.
 
   ```python
   list_techdraw_pages(doc_name: str | None = None) -> list[TextContent]
   ```
+
 - `list_view_baselines`: List the labels currently stored by capture_view_baseline.
 
   ```python
   list_view_baselines() -> list[TextContent]
   ```
+
 - `move_viewport`: Interact with the Parashell 3D viewport - navigate, zoom, orient the camera, and optionally get a screenshot.
 
   ```python
   move_viewport(action: Literal['fit_all', 'zoom_in', 'zoom_out', 'zoom_to_object', 'navicube', 'pan', 'rotate', 'set_camera'], params: dict[str, Any] | None = None, get_screenshot: bool = True, width: int | None = None, height: int | None = None) -> list[ImageContent | TextContent]
   ```
+
 - `reset_view`: Reset the Parashell viewport to a standard isometric view with all objects fitted in frame.
 
   ```python
   reset_view(get_screenshot: bool = True, width: int | None = None, height: int | None = None) -> list[ImageContent | TextContent]
   ```
+
 - `take_snapshot`: Return a structured snapshot of a document with stable uids per object.
 
   ```python
@@ -188,76 +218,91 @@ Client note: `ctx` is injected by the MCP server and is not supplied as a user a
   ```python
   add_sketch_constraints(doc_name: str, sketch_name: str, constraints: list[dict[str, Any]], recompute: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `clear_sketch_constraints`: Remove constraints from a Sketcher::SketchObject.
 
   ```python
   clear_sketch_constraints(doc_name: str, sketch_name: str, indices: list[int] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `clear_spreadsheet_cells`: Clear the content and style of cells (delete).
 
   ```python
   clear_spreadsheet_cells(doc_name: str, sheet_name: str, ranges: list[str] | str, recompute: bool = True) -> list[TextContent]
   ```
+
 - `create_spreadsheet`: Create a new Spreadsheet::Sheet object in a Parashell document.
 
   ```python
   create_spreadsheet(doc_name: str, name: str = 'Spreadsheet', label: str | None = None) -> list[TextContent]
   ```
+
 - `edit_sketch_geometry`: Add, replace, or delete geometry entries in a Sketcher::SketchObject.
 
   ```python
   edit_sketch_geometry(doc_name: str, sketch_name: str, operation: Literal['append', 'replace', 'delete'] = 'append', geometry: list[dict[str, Any]] | None = None, delete_indices: list[int] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `export_spreadsheet_csv`: Export a spreadsheet's cells to a delimited text file.
 
   ```python
   export_spreadsheet_csv(doc_name: str, sheet_name: str, file_path: str, delimiter: str = '\t') -> list[TextContent]
   ```
+
 - `get_sketch`: Inspect a Sketcher::SketchObject and return a structured snapshot.
 
   ```python
   get_sketch(doc_name: str, sketch_name: str) -> list[TextContent]
   ```
+
 - `import_spreadsheet_csv`: Import a delimited text file into a spreadsheet.
 
   ```python
   import_spreadsheet_csv(doc_name: str, sheet_name: str, file_path: str, delimiter: str = '\t', recompute: bool = True) -> list[TextContent]
   ```
+
 - `list_spreadsheets`: List every Spreadsheet::Sheet in a document with its used-cell count.
 
   ```python
   list_spreadsheets(doc_name: str) -> list[TextContent]
   ```
+
 - `merge_spreadsheet_cells`: Merge a rectangular range into one logical cell, or split a merged cell.
 
   ```python
   merge_spreadsheet_cells(doc_name: str, sheet_name: str, ranges: list[str] | str, action: Literal['merge', 'split'] = 'merge', recompute: bool = True) -> list[TextContent]
   ```
+
 - `modify_spreadsheet_structure`: Insert or remove rows and columns, shifting existing cells accordingly.
 
   ```python
   modify_spreadsheet_structure(doc_name: str, sheet_name: str, operation: Literal['insert_rows', 'remove_rows', 'insert_columns', 'remove_columns'], index: str, count: int = 1, recompute: bool = True) -> list[TextContent]
   ```
+
 - `read_spreadsheet`: Read cells from a spreadsheet, returning content, computed value, alias, and styling.
 
   ```python
   read_spreadsheet(doc_name: str, sheet_name: str, cell_range: list[str] | str | None = None) -> list[TextContent]
   ```
+
 - `set_spreadsheet_aliases`: Assign or remove cell aliases so model expressions can reference them by name.
 
   ```python
   set_spreadsheet_aliases(doc_name: str, sheet_name: str, aliases: dict[str, str], recompute: bool = True) -> list[TextContent]
   ```
+
 - `set_spreadsheet_cells`: Write content to one or more spreadsheet cells (create or update).
 
   ```python
   set_spreadsheet_cells(doc_name: str, sheet_name: str, cells: dict[str, Any], recompute: bool = True) -> list[TextContent]
   ```
+
 - `set_spreadsheet_dimensions`: Set column widths and row heights in pixels.
 
   ```python
   set_spreadsheet_dimensions(doc_name: str, sheet_name: str, column_widths: dict[str, int] | None = None, row_heights: dict[str, int] | None = None, recompute: bool = True) -> list[TextContent]
   ```
+
 - `style_spreadsheet_cells`: Apply text styling, colors, alignment, and display units to cells.
 
   ```python
@@ -273,51 +318,61 @@ Client note: `ctx` is injected by the MCP server and is not supplied as a user a
   ```python
   boolean_op(doc_name: str, operation: Literal['union', 'cut', 'intersect'], operands: list[str], result_name: str | None = None, delete_operands: bool = False, recompute: bool = True, verify_growth: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `make_arch_opening`: Create an arched opening solid (rectangular base + arched top) in one call.
 
   ```python
   make_arch_opening(doc_name: str, name: str, width: float, height: float, depth: float, arch_kind: Literal['round', 'pointed', 'flat'] = 'round', arch_height: float | None = None, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `make_crenellated_wall`: Create a crenellated wall - base wall with merlons on top - in one call.
 
   ```python
   make_crenellated_wall(doc_name: str, name: str, length: float, thickness: float, height: float, merlon_width: float, gap_width: float, merlon_height: float, start_with_merlon: bool = True, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `make_gear`: Create an involute spur (or helical) gear in one call.
 
   ```python
   make_gear(doc_name: str, name: str, module: float, tooth_count: int, thickness: float, pressure_angle_deg: float = 20.0, hub_radius: float = 0.0, bore_radius: float = 0.0, helix_angle_deg: float = 0.0, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `make_hollow_box`: Create a hollow box (outer minus inner) in one call.
 
   ```python
   make_hollow_box(doc_name: str, name: str, length: float, width: float, height: float, thickness: float, open_top: bool = False, open_bottom: bool = False, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `make_hollow_cylinder`: Create a hollow cylinder (outer cylinder minus inner cylinder) in one call.
 
   ```python
   make_hollow_cylinder(doc_name: str, name: str, outer_radius: float, height: float, thickness: float, open_top: bool = True, open_bottom: bool = False, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `make_pyramid`: Create a pyramid solid in one call. Two modes:.
 
   ```python
   make_pyramid(doc_name: str, name: str, base_radius: float | None = None, base_sides: int = 4, height: float | None = None, base_rotation_deg: float = 0.0, base_points: list[list[float]] | None = None, apex: list[float] | None = None, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `make_ring`: Create a ring (or solid disc when inner_radius=0) in one call.
 
   ```python
   make_ring(doc_name: str, name: str, outer_radius: float, thickness: float, inner_radius: float = 0.0, tilt_deg: float = 0.0, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `make_segment_between_points`: Create a segment (cylinder or box) between two world-space points.
 
   ```python
   make_segment_between_points(doc_name: str, name: str, p1: list[float], p2: list[float], cross_section: Literal['circular', 'box'] = 'circular', radius: float | None = None, width: float | None = None, height: float | None = None, end_caps: Literal['flat', 'round'] = 'flat', recompute: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `make_sketch_extrude`: Build a 2D profile from line/arc segments and extrude it into a solid.
 
   ```python
   make_sketch_extrude(doc_name: str, name: str, profile: list[dict[str, Any]], depth: float, direction: list[float] | None = None, placement: dict[str, Any] | None = None, recompute: bool = True) -> list[TextContent | ImageContent]
   ```
+
 - `make_strut_between_points`: Create a cylindrical strut between two world-space points.
 
   ```python
@@ -333,41 +388,49 @@ Client note: `ctx` is injected by the MCP server and is not supplied as a user a
   ```python
   analyze_mass_properties(doc_name: str, target: str, density: float | None = None) -> list[TextContent]
   ```
+
 - `check_geometry`: Run a deep OCC geometry validity scan on the shapes you just built.
 
   ```python
   check_geometry(doc_name: str, obj_names: list[str] | None = None, run_bop_check: bool = True, min_edge_length: float = 1e-07, min_face_area: float = 1e-09, only_invalid: bool = False) -> list[TextContent]
   ```
+
 - `check_interferences`: Detect solid-on-solid clashes and clearance violations in an assembly.
 
   ```python
   check_interferences(doc_name: str, obj_names: list[str] | None = None, clearance: float = 0.0, compute_volume: bool = True) -> list[TextContent]
   ```
+
 - `check_objects`: Inspect the validity of one or more objects in a Parashell document.
 
   ```python
   check_objects(doc_name: str, obj_names: list[str] | None = None, only_unhealthy: bool = False) -> list[TextContent]
   ```
+
 - `get_bounding_box`: Return the bounding box of an object or subelement.
 
   ```python
   get_bounding_box(doc_name: str, target: str) -> list[TextContent]
   ```
+
 - `get_shape_info`: Return shape diagnostics for a single object without writing Python.
 
   ```python
   get_shape_info(doc_name: str, obj_name: str) -> list[TextContent]
   ```
+
 - `measure_distance`: Measure the distance between two points, objects, or subelements.
 
   ```python
   measure_distance(doc_name: str, a: Any, b: Any) -> list[TextContent]
   ```
+
 - `validate_document`: Run a whole-document introspective validation and return a single verdict.
 
   ```python
   validate_document(doc_name: str, deep_geometry: bool = False, run_bop_check: bool = False) -> list[TextContent]
   ```
+
 - `verify_solid`: Introspectively verify that a shape is a real, filled solid.
 
   ```python
@@ -383,56 +446,67 @@ Client note: `ctx` is injected by the MCP server and is not supplied as a user a
   ```python
   autosave(doc_name: str | None = None, fallback_dir: str | None = None) -> list[TextContent]
   ```
+
 - `execute_code`: Execute arbitrary Python code in Parashell.
 
   ```python
   execute_code(code: str, reason: str, expected_action: str, transaction_id: str) -> list[TextContent | ImageContent]
   ```
+
 - `is_file_saved`: Report whether a document is saved to a file on disk.
 
   ```python
   is_file_saved(doc_name: str | None = None) -> list[TextContent]
   ```
+
 - `request_file_save`: Ask the user where to save a model via a save-location prompt.
 
   ```python
   request_file_save(doc_name: str | None = None, suggested_name: str | None = None) -> list[TextContent]
   ```
+
 - `rollback_to_transaction`: Hard-reset a document to the exact state of an applied transaction.
 
   ```python
   rollback_to_transaction(transaction_id: str) -> list[TextContent | ImageContent]
   ```
+
 - `transaction_apply`: Apply an open transaction: commit its changes, recompute, and save.
 
   ```python
   transaction_apply(transaction_id: str) -> list[TextContent | ImageContent]
   ```
+
 - `transaction_cancel`: Cancel a transaction and roll back its changes.
 
   ```python
   transaction_cancel(transaction_id: str) -> list[TextContent | ImageContent]
   ```
+
 - `transaction_create`: Open a new transaction against a document and get its id.
 
   ```python
   transaction_create(doc_name: str, label: str | None = None, reason: str | None = None) -> list[TextContent]
   ```
+
 - `transaction_delete`: Permanently remove a transaction record.
 
   ```python
   transaction_delete(transaction_id: str) -> list[TextContent]
   ```
+
 - `transaction_get`: Get the full record of a single transaction, including its operation log.
 
   ```python
   transaction_get(transaction_id: str) -> list[TextContent]
   ```
+
 - `transaction_list`: List tracked transactions and their status.
 
   ```python
   transaction_list(doc_name: str | None = None) -> list[TextContent]
   ```
+
 - `transaction_plan`: Preview the pending changes of a transaction without persisting them.
 
   ```python
@@ -448,78 +522,109 @@ Client note: `ctx` is injected by the MCP server and is not supplied as a user a
   ```python
   calc_capabilities() -> list[TextContent]
   ```
+
 - `calc_constant`: Look up a physical or mathematical constant.
 
   ```python
   calc_constant(name: str) -> list[TextContent]
   ```
+
 - `calc_describe`: Describe a single function or constant in the calc_evaluate namespace.
 
   ```python
   calc_describe(name: str) -> list[TextContent]
   ```
+
 - `calc_differentiate`: Compute the symbolic derivative of an expression.
 
   ```python
   calc_differentiate(expression: str, variable: str = 'x', order: int = 1) -> list[TextContent]
   ```
+
 - `calc_distribution`: Evaluate a SciPy probability distribution.
 
   ```python
   calc_distribution(name: str, operation: str, x: Any = None, params: list[float] | None = None, q: float | None = None) -> list[TextContent]
   ```
+
 - `calc_evaluate`: Numerically evaluate a scientific expression.
 
   ```python
   calc_evaluate(expression: str, variables: dict[str, Any] | None = None) -> list[TextContent]
   ```
+
 - `calc_integrate`: Compute a definite or indefinite integral symbolically.
 
   ```python
   calc_integrate(expression: str, variable: str = 'x', lower: Any = None, upper: Any = None) -> list[TextContent]
   ```
+
 - `calc_limit`: Compute the limit of an expression as a variable approaches a point.
 
   ```python
   calc_limit(expression: str, variable: str = 'x', point: Any = '0', direction: str = '+') -> list[TextContent]
   ```
+
 - `calc_matrix`: Perform linear algebra on matrices.
 
   ```python
   calc_matrix(operation: str, matrix: list[list[Any]], matrix_b: list[list[Any]] | None = None, vector: list[Any] | None = None) -> list[TextContent]
   ```
+
 - `calc_product`: Evaluate the product of an expression over an index range.
 
   ```python
   calc_product(expression: str, variable: str = 'x', lower: Any = 1, upper: Any = 10) -> list[TextContent]
   ```
+
 - `calc_series`: Compute the Taylor or Laurent series of an expression.
 
   ```python
   calc_series(expression: str, variable: str = 'x', point: Any = 0, order: int = 6) -> list[TextContent]
   ```
+
 - `calc_solve`: Solve an equation or a system of equations symbolically.
 
   ```python
   calc_solve(equations: Any, unknowns: Any = None) -> list[TextContent]
   ```
+
 - `calc_statistics`: Compute statistics, correlation, regression, and hypothesis tests.
 
   ```python
   calc_statistics(operation: str, data: list[float], data_y: list[float] | None = None, confidence: float = 0.95, popmean: float = 0.0) -> list[TextContent]
   ```
+
 - `calc_summation`: Evaluate the summation of an expression over an index range.
 
   ```python
   calc_summation(expression: str, variable: str = 'x', lower: Any = 0, upper: Any = 10) -> list[TextContent]
   ```
+
 - `calc_transform`: Rewrite an expression with a symbolic transformation.
 
   ```python
   calc_transform(expression: str, operation: str = 'simplify') -> list[TextContent]
   ```
+
 - `calc_vector`: Perform vector algebra.
 
   ```python
   calc_vector(operation: str, vector_a: list[Any], vector_b: Any = None) -> list[TextContent]
+  ```
+
+## Research and web tools
+
+[Live web search and full-page reading backed by Exa, served through Hubble.](/agent/tools/research-web)
+
+- `web_search`: Search the live web for current, external information and get ranked results with highlights.
+
+  ```python
+  web_search(query: str, num_results: int = 10, type: Literal['auto', 'fast', 'instant'] = 'auto', include_domains: str = '', exclude_domains: str = '', include_text: bool = False) -> list[TextContent]
+  ```
+
+- `web_fetch`: Read the full, cleaned text of a specific web page by URL.
+
+  ```python
+  web_fetch(url: str, char_limit_overide: bool = False, highlights_query: str = '') -> list[TextContent]
   ```

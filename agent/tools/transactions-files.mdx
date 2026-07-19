@@ -66,6 +66,15 @@ Args:
     transaction_id: Id of the open transaction returned by transaction_create.
 ```
 
+Failure behavior: if the snippet raises after making partial edits, the open
+transaction is aborted automatically. Every edit from the failed call is
+discarded, the document is restored to its pre-transaction state, and nothing is
+saved, so a failed run never leaves partial objects behind for the next autosave
+to persist. The transaction is marked cancelled; open a new one with
+transaction_create before retrying. If the abort itself cannot run, the response
+warns that partial edits may remain and to inspect the document with
+get_world_state before applying or saving.
+
 ## `is_file_saved`
 
 Signature:

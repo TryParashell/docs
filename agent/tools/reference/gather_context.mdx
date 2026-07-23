@@ -1,0 +1,26 @@
+---
+title: "gather_context"
+description: "Search Parashell, FreeCAD, and forum sources for ranked context."
+---
+
+## Signature
+
+```python
+gather_context(source: str, keywords: str, limit: int = 20) -> list[TextContent]
+```
+
+Descriptor: `search parashell and freecad documentation`
+
+## Invocation
+
+```json
+{
+  "source": "parashell-docs,existing-freecad-docs",
+  "keywords": "rollback transaction",
+  "limit": 20
+}
+```
+
+## Operational notes
+
+Sources are comma-separated and validated before the request. HTTP failures preserve the status and server detail, identify the selected sources, and recommend retrying sources separately. Network, endpoint-discovery, and response-decoding failures return distinct recoverable diagnostics.

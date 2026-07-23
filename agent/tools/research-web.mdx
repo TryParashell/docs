@@ -1,16 +1,33 @@
 ---
 title: "Research and web tools"
-description: "Live web search and web page reading backed by Exa, served through Hubble."
+description: "Parashell and FreeCAD context retrieval plus live web search and page reading through Hubble."
 ---
 
-Live web search and full-page reading for information outside the Parashell and
-FreeCAD documentation. Both tools are backed by Exa and served through the
-WorkOS-authenticated Hubble service; the Exa API key stays server-side and is
-never exposed to the agent.
+Parashell and FreeCAD context retrieval, live web search, and full-page reading.
+The tools are served through the WorkOS-authenticated Hubble service; provider
+credentials stay server-side and are never exposed to the agent.
 
-Tool count: `2`.
+Tool count: `3`.
 
 Client note: `ctx` is injected by the MCP server and is not supplied as a user argument.
+
+## `gather_context`
+
+Signature:
+
+```python
+gather_context(source: str, keywords: str, limit: int = 20) -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+search parashell and freecad documentation
+```
+
+Searches one or more comma-separated Parashell documentation, FreeCAD wiki, or
+FreeCAD forum sources. HTTP errors preserve status and service detail and advise
+retrying sources separately so one unavailable provider can be isolated.
 
 ## `web_search`
 

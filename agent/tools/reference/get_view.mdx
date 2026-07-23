@@ -1,0 +1,22 @@
+---
+title: "get_view"
+description: "Capture a validated Parashell viewport image from a named view."
+---
+
+## Signature
+
+```python
+get_view(view_name: Literal["Isometric", "Front", "Top", "Right", "Back", "Left", "Bottom", "Dimetric", "Trimetric"], width: int | None = None, height: int | None = None, focus_object: str | None = None, display_mode: Literal["Shaded", "Wireframe", "Flat Lines", "Hidden line", "Points", "As is"] | None = None, hide: list[str] | None = None, show_only: list[str] | None = None, highlight: list[str] | None = None, highlight_color: list[float] | None = None, camera_mode: Literal["Perspective", "Orthographic"] | None = None) -> list[ImageContent | TextContent]
+```
+
+Descriptor: `get view`
+
+## Invocation
+
+```json
+{ "view_name": "Isometric", "width": 800, "height": 600 }
+```
+
+## Operational notes
+
+Capture resolves only the active App document's GUI view and creates a 3D view when needed. The renderer is settled and retried once. Corrupt or fully black PNGs are rejected instead of returned as successful captures.

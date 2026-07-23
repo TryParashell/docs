@@ -37,6 +37,19 @@
         "group": "MCP Tools",
         "pages": [
           "agent/tools/index",
+          {
+            "group": "Tool reference",
+            "pages": [
+              "agent/tools/reference/index",
+              "agent/tools/reference/execute_code",
+              "agent/tools/reference/gather_context",
+              "agent/tools/reference/get_ortho",
+              "agent/tools/reference/get_view",
+              "agent/tools/reference/get_world_state",
+              "agent/tools/reference/part_design_polar_pattern",
+              "agent/tools/reference/rollback_to_transaction"
+            ]
+          },
           "agent/tools/document-objects",
           "agent/tools/inspection-rendering",
           "agent/tools/sketch-spreadsheet",

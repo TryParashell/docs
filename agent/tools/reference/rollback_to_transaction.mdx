@@ -1,0 +1,22 @@
+---
+title: "rollback_to_transaction"
+description: "Restore the exact pre-change checkpoint for an applied transaction."
+---
+
+## Signature
+
+```python
+rollback_to_transaction(transaction_id: str) -> list[TextContent | ImageContent]
+```
+
+Descriptor: `rollback to transaction`
+
+## Invocation
+
+```json
+{ "transaction_id": "<applied-transaction-id>" }
+```
+
+## Operational notes
+
+The checkpoint is captured before the transaction opens. Passing that applied transaction's id removes every change introduced by it and every newer transaction. Restoration verifies document identity and the checkpoint object set before autosave. Missing or inconsistent checkpoints fail without reporting a successful rollback.

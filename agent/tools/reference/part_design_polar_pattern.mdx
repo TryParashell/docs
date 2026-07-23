@@ -1,0 +1,22 @@
+---
+title: "part_design_polar_pattern"
+description: "Run the Part Design polar-pattern command with the supported axis contract."
+---
+
+## Signature
+
+```python
+part_design_polar_pattern() -> list[TextContent]
+```
+
+Descriptor: `run polar pattern using its axis property`
+
+## Invocation
+
+```json
+{}
+```
+
+## Operational notes
+
+This invokes FreeCAD's `PartDesign_PolarPattern` command. A `PartDesign::PolarPattern` object uses the case-sensitive `Axis` property, for example `pattern.Axis = (doc.Z_Axis, [""])` or a sketch normal axis. `ReferenceAxis` belongs to other Part Design feature types and is not a PolarPattern property.

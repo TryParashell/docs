@@ -5,7 +5,7 @@ description: "Document lifecycle, object CRUD, groups, parts library insertion, 
 
 Document lifecycle, object CRUD, groups, parts library insertion, appearance, patterns, and recompute.
 
-Tool count: `14`.
+Tool count: `15`.
 
 Client note: `ctx` is injected by the MCP server and is not supplied as a user argument.
 
@@ -430,3 +430,19 @@ Args:
     targets: List of object names or uids.
     properties: Dict of view properties to apply to every target.
 ```
+
+## `part_design_polar_pattern`
+
+Signature:
+
+```python
+part_design_polar_pattern() -> list[TextContent]
+```
+
+Descriptor:
+
+```text
+run polar pattern using its axis property
+```
+
+Runs the Part Design polar-pattern command. Programmatic `PartDesign::PolarPattern` objects use the case-sensitive `Axis` property. `ReferenceAxis` is not a PolarPattern property.

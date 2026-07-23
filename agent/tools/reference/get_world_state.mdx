@@ -1,0 +1,30 @@
+---
+title: "get_world_state"
+description: "Return structured document, geometry, health, and feature-tree state."
+---
+
+## Signature
+
+```python
+get_world_state(doc_name: str | None = None, include_feature_tree: bool = True, include_geometry: bool = True, max_objects: int = 400, no_vp: bool = False, delta: bool = False, fmt: str = "table") -> list[TextContent]
+```
+
+Descriptor: `summarize the scene`
+
+## Invocation
+
+```json
+{
+  "doc_name": "Assembly",
+  "include_feature_tree": true,
+  "include_geometry": true,
+  "max_objects": 400,
+  "no_vp": false,
+  "delta": false,
+  "fmt": "table"
+}
+```
+
+## Operational notes
+
+`max_objects` caps detailed object rows only. Document-level object counts, category counts, unhealthy counts, and `model_bbox` scan the complete document, including valid PartDesign geometry beyond the row limit. Bounding-box lengths are derived from finite min/max coordinates.

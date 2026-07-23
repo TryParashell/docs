@@ -1,0 +1,27 @@
+---
+title: "execute_code"
+description: "Execute approved Python code inside an open Parashell transaction."
+---
+
+## Signature
+
+```python
+execute_code(code: str, reason: str, expected_action: str, transaction_id: str) -> list[TextContent | ImageContent]
+```
+
+Descriptor: `run approved python code`
+
+## Invocation
+
+```json
+{
+  "code": "doc.recompute()",
+  "reason": "Recompute the active document after updating its parametric feature values",
+  "expected_action": "Recompute all pending document features",
+  "transaction_id": "<transaction-id>"
+}
+```
+
+## Operational notes
+
+The call waits for the queued Parashell GUI task to finish instead of reporting a timeout while code continues running. The transaction must remain open. Successful execution records one operation before the response is delivered. A raised exception removes objects added by that call while preserving earlier successful edits in the transaction.

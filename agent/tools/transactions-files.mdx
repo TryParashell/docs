@@ -71,7 +71,9 @@ call are removed and the document is recomputed. Edits from earlier successful
 calls in the same open transaction are preserved, and the transaction stays open
 so you can continue or cancel it explicitly with transaction_cancel. The response
 lists what was reverted; nothing is saved on failure, so a failed run never leaves
-new partial objects behind for the next autosave to persist.
+new partial objects behind for the next autosave to persist. Execution waits for
+the queued GUI task to finish; it does not report a timeout while the same code
+continues mutating the document in the background.
 
 ## `is_file_saved`
 
@@ -124,17 +126,17 @@ rollback_to_transaction(transaction_id: str) -> list[TextContent | ImageContent]
 Descriptor:
 
 ```text
-Hard-reset a document to the exact state of an applied transaction.
+Hard-reset a document to the exact state before an applied transaction.
 
-Like 'git reset --hard <commit>': restores the document to the checkpoint
-captured when the given transaction was applied and discards every change
-made after it, no matter how many transactions sit on top. Transactions
-newer than the target are marked cancelled. Only applied transactions have a
-checkpoint to roll back to. This destroys later work - confirm with the user
-before using it when applied changes would be lost.
+Like reverting a commit and every commit above it: restores the pre-change
+checkpoint captured before the given transaction opened, discarding the target
+transaction's edits and every later change. Transactions newer than the target
+are marked cancelled. Restoration verifies document identity and the checkpoint
+object set before autosave. This destroys applied work - confirm with the user
+before using it when changes would be lost.
 
 Args:
-    transaction_id: Id of the applied transaction to roll back to.
+    transaction_id: Id of the applied transaction whose changes should be removed.
 ```
 
 ## `transaction_apply`
@@ -198,8 +200,10 @@ Transactions work like Terraform: open one here, route every edit
 (create_object, edit_object, delete_object, insert_part_from_library,
 execute_code, and any other model change) through its id while it is open,
 review the pending changes with transaction_plan, then transaction_apply to
-persist and save them or transaction_cancel to roll everything back. Only one
-transaction can be open per document at a time.
+persist and save them or transaction_cancel to roll everything back. Creation
+writes a pre-change file checkpoint before opening the native transaction and
+fails safely if that checkpoint cannot be created. Only one transaction can be
+open per document at a time.
 
 Args:
     doc_name: Document to open the transaction on.

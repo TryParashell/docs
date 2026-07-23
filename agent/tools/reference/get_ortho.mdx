@@ -1,0 +1,22 @@
+---
+title: "get_ortho"
+description: "Capture validated orthographic viewport tiles as a labeled composite."
+---
+
+## Signature
+
+```python
+get_ortho(views: list[str] | None = None, tile_width: int = 480, tile_height: int = 360, focus_object: str | None = None, include_isometric: bool = True, display_mode: Literal["Shaded", "Wireframe", "Flat Lines", "Hidden line", "Points", "As is"] | None = None, hide: list[str] | None = None, show_only: list[str] | None = None, highlight: list[str] | None = None, highlight_color: list[float] | None = None, camera_mode: Literal["Perspective", "Orthographic"] | None = None) -> list[ImageContent | TextContent]
+```
+
+Descriptor: `capture orthographic views`
+
+## Invocation
+
+```json
+{ "views": ["Front", "Right", "Top"], "include_isometric": true }
+```
+
+## Operational notes
+
+Every tile uses the active document's 3D view, settles twice, and is decoded before compositing. Corrupt or fully black tiles are skipped. If no usable tile remains, the tool returns a diagnostic instead of a misleading labeled black composite.

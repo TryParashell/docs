@@ -179,7 +179,9 @@ accept either object names or take_snapshot uids.
 
 Each tile is fully settled before it is captured, so no tile shows a
 mid-transition camera. Camera animation is disabled during the capture and
-re-enabled afterward.
+re-enabled afterward. Capture is repeated after the first settle, and each PNG
+is decoded and checked for visible pixels before compositing. Corrupt or fully
+black tiles are omitted rather than returned as successful views.
 
 Args:
     views: List of view names to include. Defaults to all six orthographic views
@@ -269,9 +271,12 @@ LineColor / LineWidth. Targets accept either a stable uid from take_snapshot
 (e.g. "obj_a1b2c3...") or a plain object name. Subelements use either a
 sub_ uid or "ObjectName#Face3" notation.
 
-The viewport is fully settled before the image is captured, so the screenshot
-never shows a mid-transition camera. Any animation is disabled during the
-capture and re-enabled afterward.
+The active App document's GUI view is resolved or created before capture; views
+from other open documents are never used as fallbacks. The viewport is fully
+settled before the image is captured, so the screenshot never shows a
+mid-transition camera. Any animation is disabled during capture and restored
+afterward. A blank or corrupt frame is retried once and rejected if it remains
+unusable.
 
 Args:
     view_name: Standard view name - Isometric, Front, Top, Right, Back, Left, Bottom, Dimetric, or Trimetric.
@@ -380,8 +385,9 @@ Args:
     doc_name: Limit the digest to a single document. Omit to digest every open document.
     include_feature_tree: Include PartDesign body feature chains. Default True.
     include_geometry: Include per-object volume/area/counts/bbox and the model bbox. Default True.
-    max_objects: Cap the number of objects detailed per document (newest beyond the
-                 cap are summarized in counts only). Default 400.
+    max_objects: Cap the number of detailed object rows per document. Aggregate
+                 object/category/health counts and model_bbox still scan the
+                 complete document. Default 400.
 ```
 
 ## `list_techdraw_pages`
